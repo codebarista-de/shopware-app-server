@@ -1,0 +1,115 @@
+import com.vanniktech.maven.publish.SonatypeHost
+
+plugins {
+    id 'java-library'
+    id 'jacoco'
+    id "com.vanniktech.maven.publish" version "0.31.0"
+
+
+    id 'org.springframework.boot' version '3.4.1'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.gorylenko.gradle-git-properties' version '2.4.1'
+}
+
+group = 'de.codebarista'
+version = '0.0.1'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.4.1'
+    }
+}
+
+dependencies {
+    api 'org.springframework.boot:spring-boot-starter-web'
+    api 'org.springframework.boot:spring-boot-starter-webflux'
+    api 'org.springframework.boot:spring-boot-starter-security'
+    api 'org.springframework.boot:spring-boot-starter-data-jpa'
+    api 'com.aventrix.jnanoid:jnanoid:2.0.0'
+
+    api 'org.liquibase:liquibase-core:4.29.0'
+    api 'org.xerial:sqlite-jdbc:3.45.2.0'
+    api 'org.hibernate.orm:hibernate-community-dialects:6.4.4.Final'
+    api 'org.openapitools:jackson-databind-nullable:0.2.6'
+
+    api 'de.codebarista:shopware-model:0.0.2'
+    
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+}
+
+// Remove commons-logging from all dependencies
+configurations.api {
+    exclude group: 'commons-logging', module: 'commons-logging'
+}
+
+// Disable Spring Boot's bootJar task for library projects
+jar {
+    enabled = true
+    archiveClassifier = ''
+}
+
+bootJar {
+    enabled = false
+}
+
+mavenPublishing {
+    pom {
+        name.set("Shopware App Backend SDK")
+        description.set("Java Spring Boot library for building Shopware 6 app backends")
+        url.set("https://github.com/codebarista-de/shopware-app-backend-sdk")
+
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
+            }
+        }
+
+        developers {
+            developer {
+                id.set("codebarista.de")
+                name.set("Codebarista")
+            }
+        }
+
+        scm {
+            connection.set("scm:git:git://github.com/codebarista-de/shopware-app-backend-sdk.git")
+            developerConnection.set("scm:git:ssh://github.com/codebarista-de/shopware-app-backend-sdk.git")
+            url.set("https://github.com/codebarista-de/shopware-app-backend-sdk")
+        }
+    }
+
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+
+    // Only sign if publishing to Maven Central (not for local)
+    if (project.hasProperty("signing.keyId")) {
+        signAllPublications()
+    }
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+}
+
+tasks.register('printVersion') {
+    doLast {
+        println project.version
+    }
+}

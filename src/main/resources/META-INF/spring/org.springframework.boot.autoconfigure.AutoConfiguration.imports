@@ -1,0 +1,4 @@
+de.codebarista.shopware.appbackend.sdk.config.AppBackendSdkCoreAutoConfiguration
+de.codebarista.shopware.appbackend.sdk.config.AppBackendSdkHttpAutoConfiguration
+de.codebarista.shopware.appbackend.sdk.config.AppBackendSdkDatabaseAutoConfiguration
+de.codebarista.shopware.appbackend.sdk.config.AppBackendSdkLiquibaseAutoConfiguration
