@@ -69,13 +69,27 @@ public class TokenServiceImpl implements TokenService {
             return false;
         }
 
+        return !isTokenExpired(token);
+    }
+
+    /**
+     * Checks if the given token has expired based on its embedded timestamp.
+     *
+     * @param token the token to check for expiration
+     * @return true if the token has expired, false otherwise
+     */
+    boolean isTokenExpired(@Nonnull String token) {
+        if (token.length() < TOKEN_TIME_LENGTH) {
+            return true; // Invalid token format, consider expired
+        }
+
         String tokenTimeString = token.substring(0, TOKEN_TIME_LENGTH);
         try {
             long tokenTimeMillis = Long.parseLong(tokenTimeString);
             long currentTimeMillis = System.currentTimeMillis();
-            return tokenTimeMillis + TOKEN_TTL_MILLIS > currentTimeMillis;
+            return tokenTimeMillis + TOKEN_TTL_MILLIS <= currentTimeMillis;
         } catch (NumberFormatException e) {
-            return false;
+            return true; // Invalid timestamp format, consider expired
         }
     }
 }
