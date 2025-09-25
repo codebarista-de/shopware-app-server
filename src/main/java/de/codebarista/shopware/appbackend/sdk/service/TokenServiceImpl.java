@@ -78,7 +78,7 @@ public class TokenServiceImpl implements TokenService {
      * @param token the token to check for expiration
      * @return true if the token has expired, false otherwise
      */
-    boolean isTokenExpired(@Nonnull String token) {
+    public boolean isTokenExpired(@Nonnull String token) {
         if (token.length() < TOKEN_TIME_LENGTH) {
             return true; // Invalid token format, consider expired
         }

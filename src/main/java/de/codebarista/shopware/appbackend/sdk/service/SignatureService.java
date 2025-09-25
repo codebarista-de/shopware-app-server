@@ -58,12 +58,12 @@ public class SignatureService {
         if (data == null || secret == null) {
             throw new InvalidSignatureException("Data or secret cannot be null");
         }
-        SecretKeySpec keySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), SIGNATURE_ALGORITHM);
         try {
+            SecretKeySpec keySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), SIGNATURE_ALGORITHM);
             Mac mac = Mac.getInstance(SIGNATURE_ALGORITHM);
             mac.init(keySpec);
             return bytesToHex(mac.doFinal(data.getBytes()));
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException | IllegalArgumentException e) {
             throw new InvalidSignatureException("Could not calculate signature", e);
         }
     }
@@ -73,14 +73,14 @@ public class SignatureService {
             return false;
         }
 
-        SecretKeySpec keySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), SIGNATURE_ALGORITHM);
         try {
+            SecretKeySpec keySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), SIGNATURE_ALGORITHM);
             Mac mac = Mac.getInstance(SIGNATURE_ALGORITHM);
             mac.init(keySpec);
             String calculated = bytesToHex(mac.doFinal(message));
             return signature.equals(calculated);
 
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException | IllegalArgumentException e) {
             return false;
         }
     }
