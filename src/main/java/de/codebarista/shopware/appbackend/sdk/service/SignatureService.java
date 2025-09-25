@@ -15,7 +15,7 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-@Component // TODO: convert to helper class with static methods?
+@Component
 public class SignatureService {
     public record SignedResponse(String response, String signature) {
     }
@@ -23,16 +23,20 @@ public class SignatureService {
     private static final String SIGNATURE_ALGORITHM = "HmacSHA256";
     private static final String HASH_ALGORITHM = "SHA-256";
 
-    private final ObjectMapper objectMapper; // TODO: use service-global ObjectMapper?
-    private final MessageDigest hashDigest;
+    // Thread-safe MessageDigest using ThreadLocal
+    private static final ThreadLocal<MessageDigest> HASH_DIGEST =
+        ThreadLocal.withInitial(() -> {
+            try {
+                return MessageDigest.getInstance(HASH_ALGORITHM);
+            } catch (NoSuchAlgorithmException e) {
+                throw new SignatureInitializationException("Could not initialize hash function SHA-256", e);
+            }
+        });
 
-    public SignatureService() {
-        objectMapper = new ObjectMapper();
-        try {
-            hashDigest = MessageDigest.getInstance(HASH_ALGORITHM);
-        } catch (NoSuchAlgorithmException e) {
-            throw new SignatureInitializationException("Could not initialize hash function SHA-256", e);
-        }
+    private final ObjectMapper objectMapper;
+
+    public SignatureService(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     public SignedResponse serializeAndCalculateSignature(@Nonnull Object data, @Nonnull String secret) {
@@ -88,7 +92,7 @@ public class SignatureService {
         if (data == null) {
             throw new InvalidSignatureException("Data to hash cannot be null");
         }
-        final byte[] hashBytes = hashDigest.digest(data.getBytes(StandardCharsets.UTF_8));
+        final byte[] hashBytes = HASH_DIGEST.get().digest(data.getBytes(StandardCharsets.UTF_8));
         return bytesToHex(hashBytes);
     }
 

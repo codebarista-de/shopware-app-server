@@ -1,5 +1,6 @@
 package de.codebarista.shopware.appbackend;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.codebarista.shopware.appbackend.sdk.model.ShopwareShopEntity;
 import de.codebarista.shopware.appbackend.sdk.service.ShopManagementService;
 import de.codebarista.shopware.appbackend.sdk.service.SignatureService;
@@ -27,7 +28,7 @@ public class TokenServiceTest {
         when(shopManagementService.getShopByIdOrThrow(any(), any())).thenReturn(shopEntity);
         when(shopManagementService.getShopById(any(), any())).thenReturn(Optional.of(shopEntity));
 
-        TokenServiceImpl tokenService = new TokenServiceImpl(shopManagementService, new SignatureService());
+        TokenServiceImpl tokenService = new TokenServiceImpl(shopManagementService, new SignatureService(new ObjectMapper()));
 
         String token = tokenService.generateAppToken(electronicInvoicingApp, shopId);
         assertThat(token).isNotNull();

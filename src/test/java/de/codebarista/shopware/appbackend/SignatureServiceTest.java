@@ -1,5 +1,6 @@
 package de.codebarista.shopware.appbackend;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.codebarista.shopware.appbackend.sdk.service.SignatureService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,7 @@ public class SignatureServiceTest {
 
     @BeforeAll
     public static void setup() {
-        signatureService = new SignatureService();
+        signatureService = new SignatureService(new ObjectMapper());
     }
 
     @Test
