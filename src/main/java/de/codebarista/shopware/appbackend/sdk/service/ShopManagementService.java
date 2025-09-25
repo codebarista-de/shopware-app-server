@@ -6,6 +6,7 @@ import de.codebarista.shopware.appbackend.sdk.exception.InvalidShopUrlException;
 import de.codebarista.shopware.appbackend.sdk.exception.NoSuchShopException;
 import de.codebarista.shopware.appbackend.sdk.model.ShopwareShopEntity;
 import de.codebarista.shopware.appbackend.sdk.model.ShopwareShopEntityRepository;
+import jakarta.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class ShopManagementService {
         this.properties = properties;
     }
 
-    public String registerShop(ShopwareApp app, String shopId, String shopUrl, String shopwareVersion) {
+    @Nonnull public String registerShop(@Nonnull ShopwareApp app, @Nonnull String shopId, @Nonnull String shopUrl, @Nonnull String shopwareVersion) {
         return getShopById(app, shopId)
                 .map(shop -> reRegisterExistingShop(app, shop, shopId, shopUrl, shopwareVersion))
                 .orElseGet(() -> registerNewShop(app, shopId, shopUrl, shopwareVersion));
@@ -79,7 +80,7 @@ public class ShopManagementService {
     }
 
     public boolean confirmShopRegistration(
-            ShopwareApp app, String shopId, String shopUrl, String apiKey, String secretKey) {
+            @Nonnull ShopwareApp app, @Nonnull String shopId, @Nonnull String shopUrl, @Nonnull String apiKey, @Nonnull String secretKey) {
         String shopHost = inferShopHost(shopUrl);
         return shopwareShopEntityRepository.findByAppKeyAndShopId(app.getAppKey(), shopId)
                 .map(shopEntity -> confirmRegistration(shopEntity, shopHost, apiKey, secretKey))
@@ -98,7 +99,7 @@ public class ShopManagementService {
         return true;
     }
 
-    public Optional<ShopwareShopEntity> getShopByUrl(ShopwareApp app, String shopUrl) {
+    @Nonnull public Optional<ShopwareShopEntity> getShopByUrl(@Nonnull ShopwareApp app, @Nonnull String shopUrl) {
         String shopHost = inferShopHost(shopUrl);
         LOGGER.debug("Get shop for {} by host '{}'", app, shopHost);
         var shops = shopwareShopEntityRepository.findByAppKeyAndShopHost(app.getAppKey(), shopHost);
@@ -116,7 +117,7 @@ public class ShopManagementService {
         }
     }
 
-    public Optional<ShopwareShopEntity> getShopById(ShopwareApp app, String shopId) {
+    @Nonnull public Optional<ShopwareShopEntity> getShopById(@Nonnull ShopwareApp app, @Nonnull String shopId) {
         LOGGER.debug("Get shop for {} by id '{}'", app, shopId);
         return shopwareShopEntityRepository.findByAppKeyAndShopId(app.getAppKey(), shopId);
     }
@@ -124,13 +125,13 @@ public class ShopManagementService {
     /**
      * @throws NoSuchShopException if no shop with the specified ID exists for this app
      */
-    public ShopwareShopEntity getShopByIdOrThrow(ShopwareApp app, String shopId) {
+    @Nonnull public ShopwareShopEntity getShopByIdOrThrow(@Nonnull ShopwareApp app, @Nonnull String shopId) {
         LOGGER.debug("Get shop for {} by id '{}'", app, shopId);
         return shopwareShopEntityRepository.findByAppKeyAndShopId(app.getAppKey(), shopId)
                 .orElseThrow(() -> NoSuchShopException.byId(app, shopId));
     }
 
-    public void deleteShop(ShopwareApp app, String shopId, String shopUrl) {
+    public void deleteShop(@Nonnull ShopwareApp app, @Nonnull String shopId, @Nonnull String shopUrl) {
         String shopHost = inferShopHost(shopUrl);
 
         final var shop = shopwareShopEntityRepository.findByAppKeyAndShopId(app.getAppKey(), shopId).orElse(null);

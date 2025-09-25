@@ -3,6 +3,7 @@ package de.codebarista.shopware.appbackend.sdk.service;
 import de.codebarista.shopware.appbackend.sdk.api.dto.action.ActionRequestDto;
 import de.codebarista.shopware.appbackend.sdk.api.dto.action.ActionResponseDto;
 import de.codebarista.shopware.appbackend.sdk.api.dto.event.ShopwareEventDto;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import java.util.Locale;
@@ -17,21 +18,21 @@ public interface ShopwareApp {
      *
      * @return a subdomain (e.g. "upload-app")
      */
-    String getAppKey();
+    @Nonnull String getAppKey();
 
     /**
      * The shared secret that is used by shopware to sign requests to the app backend
      *
      * @return the app secret
      */
-    String getAppSecret();
+    @Nonnull String getAppSecret();
 
     /**
      * The technical name of the Shopware app
      *
      * @return the app name
      */
-    String getAppName();
+    @Nonnull String getAppName();
 
     /**
      * Version of the app backend.
@@ -92,7 +93,7 @@ public interface ShopwareApp {
      * @param shopId         the ID of the shop assigned by shopware
      * @param internalShopId the ID which identifies the shop in this app-backend service instance
      */
-    void onRegisterShop(String shopHost, String shopId, long internalShopId);
+    void onRegisterShop(@Nonnull String shopHost, @Nonnull String shopId, long internalShopId);
 
     /**
      * Invoked when a shop that is already registered is registered again.
@@ -103,7 +104,7 @@ public interface ShopwareApp {
      * @param shopId         the ID of the shop assigned by shopware
      * @param internalShopId the ID which identifies the shop in this app-backend service instance
      */
-    void onReRegisterShop(String shopHost, String shopId, long internalShopId);
+    void onReRegisterShop(@Nonnull String shopHost, @Nonnull String shopId, long internalShopId);
 
     /**
      * Invoked when a shop is deleted from the app backend.
@@ -113,9 +114,9 @@ public interface ShopwareApp {
      * @param shopId         the ID of the shop assigned by shopware
      * @param internalShopId the ID which identifies the shop in this app-backend service instance
      */
-    void onDeleteShop(String shopHost, String shopId, long internalShopId);
+    void onDeleteShop(@Nonnull String shopHost, @Nonnull String shopId, long internalShopId);
 
-    void onEvent(ShopwareEventDto event, long internalShopId, @Nullable Locale userLocale, @Nullable String shopwareLanguageId);
+    void onEvent(@Nonnull ShopwareEventDto event, long internalShopId, @Nullable Locale userLocale, @Nullable String shopwareLanguageId);
 
-    ActionResponseDto<?> onAction(ActionRequestDto action, long internalShopId, @Nullable Locale userLocale, @Nullable String shopwareLanguageId);
+    @Nonnull ActionResponseDto<?> onAction(@Nonnull ActionRequestDto action, long internalShopId, @Nullable Locale userLocale, @Nullable String shopwareLanguageId);
 }

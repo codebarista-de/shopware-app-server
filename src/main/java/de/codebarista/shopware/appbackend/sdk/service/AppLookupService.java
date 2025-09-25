@@ -1,8 +1,8 @@
 package de.codebarista.shopware.appbackend.sdk.service;
 
 import de.codebarista.shopware.appbackend.sdk.exception.NoSuchAppException;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,7 +18,7 @@ public class AppLookupService {
         this.apps = apps.stream().collect(Collectors.toMap(ShopwareApp::getAppKey, Function.identity()));
     }
 
-    public @NonNull ShopwareApp getAppByKey(String appKey) {
+    @Nonnull public ShopwareApp getAppByKey(@Nonnull String appKey) {
         ShopwareApp app = apps.get(appKey);
         if (app == null) {
             throw NoSuchAppException.byKey(appKey);
@@ -26,12 +26,12 @@ public class AppLookupService {
         return app;
     }
 
-    public ShopwareApp getAppForHost(String host) {
+    @Nonnull public ShopwareApp getAppForHost(@Nonnull String host) {
         String appKey = getSubDomainFromHost(host);
         return getAppByKey(appKey);
     }
 
-    public @Nullable ShopwareApp tryGetForHost(String host) {
+    @Nullable public ShopwareApp tryGetForHost(@Nullable String host) {
         String appKey = getSubDomainFromHost(host);
         return apps.get(appKey);
     }
