@@ -19,13 +19,14 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-// TODO: make a bean, let it be auto-configured
+@Component
 public class ShopwareSignatureVerificationFilter extends OncePerRequestFilter {
     private record ShopInfo(ShopwareApp app, String shopId) {
     }
@@ -36,11 +37,14 @@ public class ShopwareSignatureVerificationFilter extends OncePerRequestFilter {
     private final AppLookupService appLookupService;
     private final ObjectMapper objectMapper;
 
-    ShopwareSignatureVerificationFilter(ShopManagementService shopManagementService, SignatureService signatureService, AppLookupService appLookupService) {
+    public ShopwareSignatureVerificationFilter(ShopManagementService shopManagementService,
+                                               SignatureService signatureService,
+                                               AppLookupService appLookupService,
+                                               ObjectMapper objectMapper) {
         this.shopManagementService = shopManagementService;
         this.signatureService = signatureService;
         this.appLookupService = appLookupService;
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
     }
 
     @Override

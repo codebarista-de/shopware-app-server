@@ -120,10 +120,8 @@ public class AppBackendSdkWebSecurityConfiguration {
 
     private final ShopwareSignatureVerificationFilter signatureVerificationFilter;
 
-    public AppBackendSdkWebSecurityConfiguration(ShopManagementService shopManagementService, SignatureService signatureService,
-                                                 AppLookupService appLookupService) {
-        signatureVerificationFilter =
-                new ShopwareSignatureVerificationFilter(shopManagementService, signatureService, appLookupService);
+    public AppBackendSdkWebSecurityConfiguration(ShopwareSignatureVerificationFilter signatureVerificationFilter) {
+        this.signatureVerificationFilter = signatureVerificationFilter;
     }
 
     @Bean
