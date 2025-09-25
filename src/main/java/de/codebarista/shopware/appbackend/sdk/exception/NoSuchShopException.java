@@ -2,7 +2,7 @@ package de.codebarista.shopware.appbackend.sdk.exception;
 
 import de.codebarista.shopware.appbackend.sdk.service.ShopwareApp;
 
-public class NoSuchShopException extends RuntimeException {
+public class NoSuchShopException extends ShopwareAppException {
     public NoSuchShopException(String message) {
         super(message);
     }

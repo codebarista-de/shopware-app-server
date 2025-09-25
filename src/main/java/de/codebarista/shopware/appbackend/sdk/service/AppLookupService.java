@@ -1,5 +1,6 @@
 package de.codebarista.shopware.appbackend.sdk.service;
 
+import de.codebarista.shopware.appbackend.sdk.exception.NoSuchAppException;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ public class AppLookupService {
     public @NonNull ShopwareApp getAppByKey(String appKey) {
         ShopwareApp app = apps.get(appKey);
         if (app == null) {
-            throw new RuntimeException(String.format("No such app %s", appKey));
+            throw NoSuchAppException.byKey(appKey);
         }
         return app;
     }

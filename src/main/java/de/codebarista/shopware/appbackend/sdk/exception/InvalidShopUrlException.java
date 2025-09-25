@@ -1,6 +1,6 @@
 package de.codebarista.shopware.appbackend.sdk.exception;
 
-public class InvalidShopUrlException extends RuntimeException {
+public class InvalidShopUrlException extends ShopwareAppException {
     public InvalidShopUrlException(String message) {
         super(message);
     }

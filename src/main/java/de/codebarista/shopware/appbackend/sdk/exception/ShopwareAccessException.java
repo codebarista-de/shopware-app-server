@@ -1,6 +1,6 @@
 package de.codebarista.shopware.appbackend.sdk.exception;
 
-public class ShopwareAccessException extends RuntimeException {
+public class ShopwareAccessException extends ShopwareAppException {
     public ShopwareAccessException(String message) {
         super(message);
     }

@@ -1,5 +1,6 @@
 package de.codebarista.shopware.appbackend.sdk.service;
 
+import de.codebarista.shopware.appbackend.sdk.exception.InvalidTokenException;
 import de.codebarista.shopware.appbackend.sdk.model.ShopwareShopEntity;
 import jakarta.annotation.Nonnull;
 import org.springframework.stereotype.Component;
@@ -27,7 +28,7 @@ public class TokenServiceImpl implements TokenService {
     public String generateAppToken(@Nonnull ShopwareApp app, @Nonnull String shopId) {
         //noinspection ConstantValue
         if (shopId == null || app == null) {
-            throw new RuntimeException("Data or secret to sign cannot be null");
+            throw new InvalidTokenException("Data or secret to sign cannot be null");
         }
 
         String secret = shopManagementService.getShopByIdOrThrow(app, shopId).getShopSecret();
