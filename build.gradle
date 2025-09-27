@@ -68,7 +68,7 @@ mavenPublishing {
     pom {
         name.set("Shopware App Backend SDK")
         description.set("Java Spring Boot library for building Shopware 6 app backends")
-        url.set("https://github.com/codebarista-de/shopware-app-backend-sdk")
+        url.set("https://github.com/codebarista-de/shopware-app-server")
 
         licenses {
             license {
@@ -85,9 +85,9 @@ mavenPublishing {
         }
 
         scm {
-            connection.set("scm:git:git://github.com/codebarista-de/shopware-app-backend-sdk.git")
-            developerConnection.set("scm:git:ssh://github.com/codebarista-de/shopware-app-backend-sdk.git")
-            url.set("https://github.com/codebarista-de/shopware-app-backend-sdk")
+            connection.set("scm:git:git://github.com/codebarista-de/shopware-app-server.git")
+            developerConnection.set("scm:git:ssh://github.com/codebarista-de/shopware-app-server.git")
+            url.set("https://github.com/codebarista-de/shopware-app-server")
         }
     }
 

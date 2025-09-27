@@ -164,7 +164,7 @@ All SDK configuration uses the `app-backend.sdk` prefix:
   1. Add Dependency
 
   dependencies {
-      implementation 'de.codebarista:shopware-app-backend-sdk:1.5.0'
+      implementation 'de.codebarista:shopware-app-server:X.Y.Z'
   }
 
   2. Extend ShopwareApp
@@ -211,7 +211,7 @@ All SDK configuration uses the `app-backend.sdk` prefix:
   The SDK is designed to be published to Maven repositories:
 
   - GroupId: de.codebarista
-  - ArtifactId: shopware-app-backend-sdk
+  - ArtifactId: shopware-app-server
   - Version: Semantic versioning (e.g., 1.5.0)
 
   License
