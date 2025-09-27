@@ -43,8 +43,6 @@ dependencies {
     api 'org.hibernate.orm:hibernate-community-dialects:6.4.4.Final'
     api 'org.openapitools:jackson-databind-nullable:0.2.6'
 
-    api 'de.codebarista:shopware-model:0.0.2'
-    
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
 }

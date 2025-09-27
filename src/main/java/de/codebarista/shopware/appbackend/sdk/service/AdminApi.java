@@ -27,7 +27,8 @@ public interface AdminApi {
      * @param responseType       java type of the search result
      * @param shopwareLanguageId ID of the language in which the Admin-API is queried. If an entity has translated fields,
      *                           they will be populated with the values of this language.
-     *                           Use {@link de.codebarista.shopware.model.extension.TranslatedField} to get the translated
+     *                           You can use TranslatedField from the Shopware Model project
+     *                           (de.codebarista.shopware.model.extension.TranslatedField) to get the translated
      *                           property value.
      * @param <T>                java type of the entity
      * @return a list of all entity instances that match the query
