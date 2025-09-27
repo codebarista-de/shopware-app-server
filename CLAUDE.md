@@ -2,20 +2,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build and Test Commands
 
-### SDK Library
-- **Build**: `./gradlew build` - Builds the SDK library JAR
+### App Server
+- **Build**: `./gradlew build` - Builds the App Server library JAR
 - **Run tests**: `./gradlew test`
 - **Publish locally**: `./gradlew publishToMavenLocal` - Publishes to local Maven repository for testing
 - **Publish**: `./gradlew publish` - Publishes to configured repository
 
 ## Architecture Overview
 
-This is the **Shopware App Backend SDK** - a Java Spring Boot library for building Shopware 6 app backends that integrate with the
+This is the **Shopware App Server** - a Java Spring Boot library for building Shopware 6 app backends that integrate with the
 Shopware App System.
 
 ### Core Functionality
 
-The SDK provides the essential framework components needed to build Shopware app backends:
+The App Server provides the essential framework components needed to build Shopware app backends:
 
 1. **App Registration & Lifecycle** - Automatic registration, confirmation, and lifecycle event handling
 2. **Authentication & Security** - Shopware signature verification and OAuth token management
@@ -25,22 +25,22 @@ The SDK provides the essential framework components needed to build Shopware app
 
 ### Package Structure
 
-- `de.codebarista.shopware.appbackend.sdk.api` - API DTOs and contracts
-- `de.codebarista.shopware.appbackend.sdk.controller` - Framework controllers
-- `de.codebarista.shopware.appbackend.sdk.service` - Core services
-- `de.codebarista.shopware.appbackend.sdk.web` - Security and web configuration
-- `de.codebarista.shopware.appbackend.sdk.repository` - Data access layer
-- `de.codebarista.shopware.appbackend.sdk.util` - Utility classes
-- `de.codebarista.shopware.appbackend.sdk.config` - Auto-configuration classes
+- `de.codebarista.shopware.appserver.api` - API DTOs and contracts
+- `de.codebarista.shopware.appserver.controller` - Framework controllers
+- `de.codebarista.shopware.appserver.service` - Core services
+- `de.codebarista.shopware.appserver.web` - Security and web configuration
+- `de.codebarista.shopware.appserver.repository` - Data access layer
+- `de.codebarista.shopware.appserver.util` - Utility classes
+- `de.codebarista.shopware.appserver.config` - Auto-configuration classes
 
 ### Auto-Configuration Architecture
 
-The SDK uses modular auto-configuration:
+The App Server uses modular auto-configuration:
 
-- **`AppBackendSdkCoreAutoConfiguration`** - General SDK settings (SSL enforcement, localhost mapping)
-- **`AppBackendSdkHttpAutoConfiguration`** - HTTP client configuration (RestTemplate, logging, error handling)
-- **`AppBackendSdkDatabaseAutoConfiguration`** - Database defaults (SQLite in-memory fallback)
-- **`AppBackendSdkLiquibaseAutoConfiguration`** - SDK core migrations (SHOPWARE_SHOP table, etc.)
+- **`AppServerCoreAutoConfiguration`** - General App Server settings (SSL enforcement, localhost mapping)
+- **`AppServerHttpAutoConfiguration`** - HTTP client configuration (RestTemplate, logging, error handling)
+- **`AppServerDatabaseAutoConfiguration`** - Database defaults (SQLite in-memory fallback)
+- **`AppServerLiquibaseAutoConfiguration`** - App Server core migrations (SHOPWARE_SHOP table, etc.)
 
 ### Key Features
 
@@ -78,7 +78,7 @@ The SDK uses modular auto-configuration:
 
 ## Framework Endpoints
 
-The SDK automatically provides these framework endpoints:
+The App Server automatically provides these framework endpoints:
 
 - `POST /shopware/app/register` - App registration
 - `POST /shopware/app/confirm` - Registration confirmation
@@ -88,25 +88,11 @@ The SDK automatically provides these framework endpoints:
 
 ## Configuration
 
-### SDK Properties
-
-All SDK configuration uses the `app-backend.sdk` prefix:
-
-  ```yaml
-  app-backend:
-    sdk:
-      # HTTP request/response logging for debugging
-      http-request-response-logging-enabled: false  # Default: false
-      
-      # Enforce SSL-only communication with Shopware  
-      ssl-only: true  # Default: true
-      
-      # Map localhost IP to domain name for development
-      map-localhost-ip-to-localhost-domain-name: false  # Default: false
+### App Server Properties
 
   Database Configuration
 
-  The SDK uses Spring Boot's standard DataSource configuration with smart defaults:
+  The App Server uses Spring Boot's standard DataSource configuration with smart defaults:
 
   Development (Zero Configuration)
 
@@ -124,9 +110,9 @@ All SDK configuration uses the `app-backend.sdk` prefix:
 
   Dual Liquibase Migration System
 
-  SDK Migrations (Automatic):
+  App Server Migrations (Automatic):
   - Run automatically when application starts
-  - Create core tables required by SDK (SHOPWARE_SHOP, etc.)
+  - Create core tables required by App Server (SHOPWARE_SHOP, etc.)
   - Use sdk-core context to avoid conflicts
 
   User Migrations (Optional):
@@ -135,10 +121,10 @@ All SDK configuration uses the `app-backend.sdk` prefix:
 
   Important Files for Modifications
 
-  - Controllers: src/main/java/de/codebarista/shopware/appbackend/sdk/controller/
-  - Services: src/main/java/de/codebarista/shopware/appbackend/sdk/service/
-  - Security: src/main/java/de/codebarista/shopware/appbackend/sdk/web/
-  - Auto-Configuration: src/main/java/de/codebarista/shopware/appbackend/sdk/config/
+  - Controllers: src/main/java/de/codebarista/shopware/appserver/controller/
+  - Services: src/main/java/de/codebarista/shopware/appserver/service/
+  - Security: src/main/java/de/codebarista/shopware/appserver/config/
+  - Auto-Configuration: src/main/java/de/codebarista/shopware/appserver/config/
   - Database Migrations: src/main/resources/db/changelog/
 
   Testing
@@ -152,7 +138,7 @@ All SDK configuration uses the `app-backend.sdk` prefix:
 
   Architectural Rules
 
-  The SDK enforces clean architecture through:
+  The App Server enforces clean architecture through:
 
   - Independence - Never imports app-specific packages
   - Module boundaries - Physical separation from business logic
@@ -199,7 +185,7 @@ All SDK configuration uses the `app-backend.sdk` prefix:
 
   Contributing
 
-  When contributing to the SDK:
+  When contributing to the App Server:
 
   1. Maintain independence - Never import app-specific packages
   2. Follow conventions - Use existing patterns and naming
@@ -208,7 +194,7 @@ All SDK configuration uses the `app-backend.sdk` prefix:
 
   Publishing
 
-  The SDK is designed to be published to Maven repositories:
+  The App Server is designed to be published to Maven repositories:
 
   - GroupId: de.codebarista
   - ArtifactId: shopware-app-server
@@ -216,7 +202,7 @@ All SDK configuration uses the `app-backend.sdk` prefix:
 
   License
 
-  This SDK is designed to be open-sourced under MIT license.
+  This App Server is designed to be open-sourced under MIT license.
 
-  This CLAUDE.md file provides comprehensive guidance for working with the extracted SDK project, covering its architecture,
+  This CLAUDE.md file provides comprehensive guidance for working with the extracted App Server project, covering its architecture,
   configuration, usage patterns, and development workflows.

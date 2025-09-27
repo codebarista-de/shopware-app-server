@@ -64,8 +64,8 @@ bootJar {
 
 mavenPublishing {
     pom {
-        name.set("Shopware App Backend SDK")
-        description.set("Java Spring Boot library for building Shopware 6 app backends")
+        name.set("Shopware App Server")
+        description.set("Java Spring Boot library for building Shopware 6 App backends")
         url.set("https://github.com/codebarista-de/shopware-app-server")
 
         licenses {

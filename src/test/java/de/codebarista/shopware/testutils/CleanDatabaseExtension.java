@@ -1,6 +1,6 @@
 package de.codebarista.shopware.testutils;
 
-import de.codebarista.shopware.appbackend.sdk.model.ShopwareShopEntityRepository;
+import de.codebarista.shopware.appserver.model.ShopwareShopEntityRepository;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;

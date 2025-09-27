@@ -49,12 +49,12 @@ The SDK follows clean architecture principles:
 
 ### Package Structure
 
-- `de.codebarista.shopware.appbackend.sdk.api` - API DTOs and contracts
-- `de.codebarista.shopware.appbackend.sdk.controller` - Framework controllers
-- `de.codebarista.shopware.appbackend.sdk.service` - Core services
-- `de.codebarista.shopware.appbackend.sdk.web` - Security and web configuration
-- `de.codebarista.shopware.appbackend.sdk.repository` - Data access layer
-- `de.codebarista.shopware.appbackend.sdk.util` - Utility classes
+- `de.codebarista.shopware.appserver.sdk.api` - API DTOs and contracts
+- `de.codebarista.shopware.appserver.sdk.controller` - Framework controllers
+- `de.codebarista.shopware.appserver.sdk.service` - Core services
+- `de.codebarista.shopware.appserver.sdk.web` - Security and web configuration
+- `de.codebarista.shopware.appserver.sdk.repository` - Data access layer
+- `de.codebarista.shopware.appserver.sdk.util` - Utility classes
 
 ## Dependencies
 
