@@ -26,7 +26,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-@Component
+/**
+ * This filter cannot be a bean, we only want to apply it to specific App-Server URLs.
+ * A GenericFilter bean in Spring Boot is automatically used for any request.
+ * This is undesired as it must not apply to all URLs exposed by App implementations.
+ */
 public class ShopwareSignatureVerificationFilter extends OncePerRequestFilter {
     private record ShopInfo(ShopwareApp app, String shopId) {
     }

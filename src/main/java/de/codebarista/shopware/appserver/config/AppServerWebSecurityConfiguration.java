@@ -1,5 +1,9 @@
 package de.codebarista.shopware.appserver.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.codebarista.shopware.appserver.service.AppLookupService;
+import de.codebarista.shopware.appserver.service.ShopManagementService;
+import de.codebarista.shopware.appserver.service.SignatureService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,8 +30,6 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
  *   <li>{@code /shopware/admin/**} – Admin extension endpoints (e.g., for serving assets).</li>
  * </ul>
  * <p>
- * The security configuration is applied with high priority ({@link Order @Order(1)})
- * to ensure App Server rules are evaluated before any application-specific security rules.
  * <p>
  * <h2>Security Features</h2>
  * <ul>
@@ -64,49 +66,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
  * <strong>Note:</strong>
  * This configuration <em>only</em> applies to App Server endpoints ({@code /shopware/**}).
  * Application endpoints must be secured separately in the host application.
- * <p>
- * <h2>Example: Overriding Default Beans</h2>
- * <pre>{@code
- * @Configuration
- * public class AppSecurityConfig {
- *
- *     // Override the default PasswordEncoder
- *     @Bean
- *     public PasswordEncoder passwordEncoder() {
- *         return new Argon2PasswordEncoder();
- *     }
- * }
- * }</pre>
- * <p>
- * <h2>Endpoint Authorization Rules</h2>
- * <table border="1">
- *   <caption>Default Authorization Rules</caption>
- *   <tr>
- *     <th>Endpoint</th>
- *     <th>HTTP Method</th>
- *     <th>Required Authority</th>
- *   </tr>
- *   <tr>
- *     <td>{@code /shopware/api/v1/registration/register}</td>
- *     <td>GET</td>
- *     <td>{@link #ROLE_SHOPWARE_APP}</td>
- *   </tr>
- *   <tr>
- *     <td>{@code /shopware/api/v1/<em>path</em>}</td>
- *     <td>ALL</td>
- *     <td>{@link #ROLE_SHOPWARE_SHOP}</td>
- *   </tr>
- *   <tr>
- *     <td>{@code /shopware/admin/<em>path1</em>/<em>path2</em>/assets/<em>path</em>}</td>
- *     <td>GET</td>
- *     <td>None (public)</td>
- *   </tr>
- *   <tr>
- *     <td>{@code /shopware/admin/<em>path</em>}</td>
- *     <td>ALL</td>
- *     <td>{@link #ROLE_SHOPWARE_SHOP}</td>
- *   </tr>
- * </table>
+ * See {@link de.codebarista.shopware.appserver.TokenService}
  */
 @Configuration
 public class AppServerWebSecurityConfiguration {
@@ -116,8 +76,14 @@ public class AppServerWebSecurityConfiguration {
 
     private final ShopwareSignatureVerificationFilter signatureVerificationFilter;
 
-    public AppServerWebSecurityConfiguration(ShopwareSignatureVerificationFilter signatureVerificationFilter) {
-        this.signatureVerificationFilter = signatureVerificationFilter;
+    public AppServerWebSecurityConfiguration(
+            ShopManagementService shopManagementService,
+            SignatureService signatureService,
+            AppLookupService appLookupService,
+            ObjectMapper objectMapper
+    ) {
+        this.signatureVerificationFilter = new ShopwareSignatureVerificationFilter(shopManagementService,
+                signatureService, appLookupService, objectMapper);
     }
 
     @Bean
