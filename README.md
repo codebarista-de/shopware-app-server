@@ -1,92 +1,42 @@
 # Shopware App Server
 
-A Java Spring Boot library for building Shopware 6 app backends that integrate with the Shopware App System.
+A Java Spring Boot library for building a Shopware 6 app backend server.
 
-## Overview
+Unlike a Shopware Plugin, a [Shopware App][1] cannot directly extend or modify the core functionality of a Shopware shop using PHP code.
+If the desired features cannot be fully realized with [App Scripts][2] or [Storefront templates and JavaScript][3], the app must rely on the shop’s REST APIs and webhooks to implement its features.
+Such a Shopware App is therefore essentially a server application, the app backend.
 
-This App Server provides the core framework components needed to build Shopware app backends, handling:
+[1]: https://developer.shopware.com/docs/concepts/extensions/apps-concept.html
+[2]: https://developer.shopware.com/docs/guides/plugins/apps/app-scripts/
+[3]: https://developer.shopware.com/docs/guides/plugins/apps/storefront/
 
-- **App Registration & Lifecycle** - Automatic registration, confirmation, and lifecycle event handling
-- **Authentication & Security** - Shopware signature verification and OAuth token management
-- **API Integration** - Pre-configured clients for Shopware Admin API
-- **Event Handling** - Webhook processing and event dispatching
-- **Database Integration** - Shop registration persistence and token storage
+This library provides the core components needed to build a shopware app backend:
 
-## Key Features
+- 🔄 **App Registration & Lifecycle** - Registration, confirmation, and app lifecycle event handling
+- 🔐 **Authentication & Security** - Shop request [signature verification and response signing][4]
+- 🌐 **API Client** - Pre-configured client for the Shopware Admin API
+- 📊 **Event Handling** - Webhook processing and event dispatching
 
-### 🔐 Security
-- Shopware app signature verification
-- Shop signature validation for incoming webhooks
-- Secure token exchange and storage
+[4]: https://developer.shopware.com/docs/guides/plugins/apps/app-signature-verification.html
 
-### 🔄 Lifecycle Management
-- Automated app registration flow
-- Installation, activation, deactivation, and deletion event handling
-- Shop configuration persistence
+## Getting started
 
-### 🌐 API Integration
-- Pre-configured WebClient for Shopware Admin API
-- Automatic token refresh and management
-- Rate limiting and error handling
-
-### 📊 Event System
-- Webhook endpoint handling
-- Event dispatching to business logic
-- Extensible event processing
-
-## Architecture
-
-The App Server follows clean architecture principles:
-
-```
-├── api/           # DTOs and API contracts
-├── controller/    # Framework HTTP endpoints
-├── service/       # Core business services
-├── web/          # Security filters and configuration
-├── repository/   # Data persistence
-└── util/         # Helper utilities
-```
-
-### Package Structure
-
-- `de.codebarista.shopware.appserver.api` - API DTOs and contracts
-- `de.codebarista.shopware.appserver.controller` - Framework controllers
-- `de.codebarista.shopware.appserver.service` - Core services
-- `de.codebarista.shopware.appserver.config` - Security and configuration
-- `de.codebarista.shopware.appserver.model` - Data access layer
-- `de.codebarista.shopware.appserver.util` - Utility classes
-
-## Dependencies
-
-### Core Dependencies
-- Spring Boot 3.4.1 (Web, Security, Data JPA, WebFlux)
-- SQLite Database (in-memory by default, for easy development)
-- Jackson for JSON processing
-- Liquibase for database migrations
-
-### External Libraries
-- `de.codebarista:shopware-model` - Generated Shopware API models
-- `jnanoid` - ID generation
-
-## Usage
-
-### 1. Add Dependency
-
+Add the shopware app server as a dependency:
 ```gradle
 dependencies {
     implementation 'de.codebarista:shopware-app-server:1.5.0'
 }
 ```
 
-### 2. Extend ShopwareApp
+Create a subclass of `ShopwareApp`:
 
 ```java
 @Component
 public class MyShopwareApp extends ShopwareApp {
 
     @Override
-    public String getAppName() {
-        return "my-app";
+    public String getAppKey() {
+        return "my-app-subdomain";
     }
 
     @Override
@@ -95,31 +45,8 @@ public class MyShopwareApp extends ShopwareApp {
     }
 
     @Override
-    public Set<String> getPermissions() {
-        return Set.of("product:read", "order:read");
-    }
-}
-```
-
-### 3. Handle Events
-
-```java
-TODO
-```
-
-### 4. Create Business Controllers
-
-```java
-@RestController
-@RequestMapping("/api/v1/myapp")
-public class MyAppController {
-
-    private final TokenService tokenService;
-
-    @GetMapping("/data")
-    public ResponseEntity<?> getData(@RequestHeader("shopware-shop-signature") String signature) {
-        // Verify signature and process request
-        return ResponseEntity.ok(data);
+    public String getAppName() {
+        return "MyAppTechnicalName"
     }
 }
 ```
