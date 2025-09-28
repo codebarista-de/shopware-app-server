@@ -104,12 +104,7 @@ public class MyShopwareApp extends ShopwareApp {
 ### 3. Handle Events
 
 ```java
-@EventListener
-public void handleOrderEvent(ShopwareEvent event) {
-    if ("order.placed".equals(event.getEventName())) {
-        // Process order placement
-    }
-}
+TODO
 ```
 
 ### 4. Create Business Controllers
@@ -157,16 +152,15 @@ The App Server uses a modular auto-configuration approach:
 All App Server configuration uses the `app-server` prefix:
 
 ```yaml
-app-backend:
-  app-server:
-    # HTTP request/response logging for debugging
-    http-request-response-logging-enabled: false  # Default: false
+app-server:
+  # HTTP request/response logging for debugging
+  http-request-response-logging-enabled: false  # Default: false
 
-    # Enforce SSL-only communication with Shopware
-    ssl-only: true  # Default: true
+  # Enforce SSL-only communication with Shopware
+  ssl-only: true  # Default: true
 
-    # Map localhost IP to domain name for development
-    map-localhost-ip-to-localhost-domain-name: false  # Default: false
+  # Map localhost IP to domain name for development
+  map-localhost-ip-to-localhost-domain-name: false  # Default: false
 ```
 
 ### Database Configuration

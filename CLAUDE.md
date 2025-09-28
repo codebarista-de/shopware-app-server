@@ -104,12 +104,7 @@ public class MyShopwareApp extends ShopwareApp {
 ### 3. Handle Events
 
 ```java
-@EventListener
-public void handleOrderEvent(ShopwareEvent event) {
-    if ("order.placed".equals(event.getEventName())) {
-        // Process order placement
-    }
-}
+TODO
 ```
 
 ## Development Guidelines
