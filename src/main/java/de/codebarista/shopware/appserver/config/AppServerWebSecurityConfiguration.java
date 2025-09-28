@@ -109,7 +109,6 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
  * </table>
  */
 @Configuration
-@Order(1) // high priority, evaluate first
 public class AppServerWebSecurityConfiguration {
 
     public static final String ROLE_SHOPWARE_SHOP = "ROLE_SHOPWARE_SHOP";
