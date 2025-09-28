@@ -1,10 +1,10 @@
-# Shopware App SDK
+# Shopware App Server
 
-A Java Spring Boot SDK for building Shopware 6 app backends that integrate with the Shopware App System.
+A Java Spring Boot library for building Shopware 6 app backends that integrate with the Shopware App System.
 
 ## Overview
 
-This SDK provides the core framework components needed to build Shopware app backends, handling:
+This App Server provides the core framework components needed to build Shopware app backends, handling:
 
 - **App Registration & Lifecycle** - Automatic registration, confirmation, and lifecycle event handling
 - **Authentication & Security** - Shopware signature verification and OAuth token management
@@ -36,7 +36,7 @@ This SDK provides the core framework components needed to build Shopware app bac
 
 ## Architecture
 
-The SDK follows clean architecture principles:
+The App Server follows clean architecture principles:
 
 ```
 ├── api/           # DTOs and API contracts
@@ -49,12 +49,12 @@ The SDK follows clean architecture principles:
 
 ### Package Structure
 
-- `de.codebarista.shopware.appserver.sdk.api` - API DTOs and contracts
-- `de.codebarista.shopware.appserver.sdk.controller` - Framework controllers
-- `de.codebarista.shopware.appserver.sdk.service` - Core services
-- `de.codebarista.shopware.appserver.sdk.web` - Security and web configuration
-- `de.codebarista.shopware.appserver.sdk.repository` - Data access layer
-- `de.codebarista.shopware.appserver.sdk.util` - Utility classes
+- `de.codebarista.shopware.appserver.api` - API DTOs and contracts
+- `de.codebarista.shopware.appserver.controller` - Framework controllers
+- `de.codebarista.shopware.appserver.service` - Core services
+- `de.codebarista.shopware.appserver.config` - Security and configuration
+- `de.codebarista.shopware.appserver.model` - Data access layer
+- `de.codebarista.shopware.appserver.util` - Utility classes
 
 ## Dependencies
 
@@ -74,7 +74,7 @@ The SDK follows clean architecture principles:
 
 ```gradle
 dependencies {
-    implementation 'de.codebarista:shopware-app-sdk:1.5.0'
+    implementation 'de.codebarista:shopware-app-server:1.5.0'
 }
 ```
 
@@ -131,7 +131,7 @@ public class MyAppController {
 
 ## Framework Endpoints
 
-The SDK automatically provides these framework endpoints:
+The App Server automatically provides these framework endpoints:
 
 - `POST /shopware/app/register` - App registration
 - `POST /shopware/app/confirm` - Registration confirmation
@@ -141,24 +141,24 @@ The SDK automatically provides these framework endpoints:
 
 ## Configuration
 
-The SDK provides comprehensive auto-configuration that's organized by functionality areas for better maintainability and clarity.
+The App Server provides comprehensive auto-configuration that's organized by functionality areas for better maintainability and clarity.
 
 ### Auto-Configuration Architecture
 
-The SDK uses a modular auto-configuration approach:
+The App Server uses a modular auto-configuration approach:
 
-- **`AppBackendSdkCoreAutoConfiguration`** - General SDK settings (SSL enforcement, localhost mapping)
-- **`AppBackendSdkHttpAutoConfiguration`** - HTTP client configuration (RestTemplate, logging, error handling)
-- **`AppBackendSdkDatabaseAutoConfiguration`** - Database defaults (SQLite in-memory fallback)
-- **`AppBackendSdkLiquibaseAutoConfiguration`** - SDK core migrations (SHOPWARE_SHOP table, etc.)
+- **`AppServerCoreAutoConfiguration`** - General App Server settings (SSL enforcement, localhost mapping)
+- **`AppServerHttpAutoConfiguration`** - HTTP client configuration (RestTemplate, logging, error handling)
+- **`AppServerDatabaseAutoConfiguration`** - Database defaults (SQLite in-memory fallback)
+- **`AppServerLiquibaseAutoConfiguration`** - App Server core migrations (SHOPWARE_SHOP table, etc.)
 
-### SDK Properties
+### App Server Properties
 
-All SDK configuration uses the `app-backend.sdk` prefix:
+All App Server configuration uses the `app-server` prefix:
 
 ```yaml
 app-backend:
-  sdk:
+  app-server:
     # HTTP request/response logging for debugging
     http-request-response-logging-enabled: false  # Default: false
 
@@ -171,15 +171,15 @@ app-backend:
 
 ### Database Configuration
 
-The SDK uses **Spring Boot's standard DataSource configuration** with smart defaults for easy development.
+The App Server uses **Spring Boot's standard DataSource configuration** with smart defaults for easy development.
 
 #### Development (Zero Configuration)
 
-No configuration needed - the SDK automatically provides SQLite in-memory:
+No configuration needed - the App Server automatically provides SQLite in-memory:
 
 ```yaml
 # No configuration required!
-# SDK automatically configures:
+# App Server automatically configures:
 # - SQLite in-memory database (jdbc:sqlite::memory:)
 # - Proper SQLite dialect
 # - Liquibase migrations
@@ -187,7 +187,7 @@ No configuration needed - the SDK automatically provides SQLite in-memory:
 
 #### Production (Standard Spring Boot)
 
-Use standard Spring Boot DataSource configuration - the SDK automatically detects it:
+Use standard Spring Boot DataSource configuration - the App Server automatically detects it:
 
 ```yaml
 # Standard Spring Boot DataSource configuration
@@ -214,22 +214,22 @@ spring:
 ```
 
 **How it works:**
-- SDK provides `DataSourceProperties` defaults only when none exist
+- App Server provides `DataSourceProperties` defaults only when none exist
 - Spring Boot's `DataSourceAutoConfiguration` handles the rest
-- Your configuration automatically overrides SDK defaults
-- No manual switches or SDK-specific properties needed
+- Your configuration automatically overrides App Server defaults
+- No manual switches or App Server-specific properties needed
 
 **Supported databases:** Any database supported by Spring Boot DataSource auto-configuration (PostgreSQL, MySQL, SQLite, H2, etc.)
 
 #### Database Migrations
 
-The SDK uses a **dual Liquibase setup** to separate core SDK migrations from your custom migrations:
+The App Server uses a **dual Liquibase setup** to separate core App Server migrations from your custom migrations:
 
-**SDK Migrations (Automatic):**
+**App Server Migrations (Automatic):**
 - Run automatically when the application starts
-- Create core tables required by the SDK (`SHOPWARE_SHOP`, etc.)
-- Use `sdk-core` context to avoid conflicts
-- Cannot be disabled (required for SDK functionality)
+- Create core tables required by the App Server (`SHOPWARE_SHOP`, etc.)
+- Use `app-server-core` context to avoid conflicts
+- Cannot be disabled (required for App Server functionality)
 
 **User Migrations (Optional):**
 ```yaml
@@ -253,14 +253,14 @@ spring:
    ```
 
 **Benefits:**
-- SDK migrations are always applied automatically
-- No conflicts between SDK and user migrations
+- App Server migrations are always applied automatically
+- No conflicts between App Server and user migrations
 - Users can safely add their own database changes
 - Both use the same DataSource and transaction
 
 ### HTTP Client Configuration
 
-The SDK provides a pre-configured `RestTemplate` optimized for Shopware API communication:
+The App Server provides a pre-configured `RestTemplate` optimized for Shopware API communication:
 
 **Features:**
 - **Disabled redirects** - Prevents infinite redirect loops with Shopware APIs
@@ -271,7 +271,7 @@ The SDK provides a pre-configured `RestTemplate` optimized for Shopware API comm
 **Configuration:**
 ```yaml
 app-backend:
-  sdk:
+  app-server:
     http-request-response-logging-enabled: true  # Enable detailed HTTP logging
 ```
 
@@ -287,30 +287,30 @@ ResponseEntity<String> response = shopwareRestTemplate.exchange(
     shopwareApiUrl, HttpMethod.GET, requestEntity, String.class);
 ```
 
-### Core SDK Configuration
+### Core App Server Configuration
 
-The SDK provides several configuration options for different deployment scenarios:
+The App Server provides several configuration options for different deployment scenarios:
 
 **SSL Enforcement:**
 ```yaml
 app-backend:
-  sdk:
+  app-server:
     ssl-only: true  # Default: true - Reject HTTP URLs in production
 ```
 
 **Development Helpers:**
 ```yaml
 app-backend:
-  sdk:
+  app-server:
     map-localhost-ip-to-localhost-domain-name: true  # Map 127.0.0.1 to localhost
 ```
 
 **Access Configuration Bean:**
 ```java
 @Autowired
-private AppBackendSdkConfiguration sdkConfiguration;
+private AppServerConfiguration appServerConfiguration;
 
-if (sdkConfiguration.isSslOnly()) {
+if (appServerConfiguration.isSslOnly()) {
     // Enforce HTTPS URLs only
 }
 ```
@@ -324,7 +324,7 @@ if (sdkConfiguration.isSslOnly()) {
 
 ### Signature Verification
 
-All incoming requests from Shopware are automatically verified using HMAC-SHA256 signatures. The SDK handles:
+All incoming requests from Shopware are automatically verified using HMAC-SHA256 signatures. The App Server handles:
 
 - App registration signature verification
 - Shop signature verification for webhooks
@@ -340,7 +340,7 @@ OAuth tokens are automatically managed:
 
 ## Database Schema
 
-The SDK automatically creates and manages these tables via Liquibase:
+The App Server automatically creates and manages these tables via Liquibase:
 
 - `shop_registration` - Registered shop information
 - `access_token` - OAuth access tokens
@@ -348,7 +348,7 @@ The SDK automatically creates and manages these tables via Liquibase:
 
 ### Supported Databases
 
-The SDK works with any database supported by Spring Boot's DataSource auto-configuration:
+The App Server works with any database supported by Spring Boot's DataSource auto-configuration:
 
 - **SQLite** (default) - In-memory for development, file-based for simple deployments
 - **PostgreSQL** - Recommended for production environments
@@ -361,7 +361,7 @@ Simply configure using standard Spring Boot `spring.datasource.*` properties.
 
 ## Testing
 
-The SDK includes comprehensive test utilities:
+The App Server includes comprehensive test utilities:
 
 - Mock Shopware server setup
 - Test data builders
@@ -369,7 +369,7 @@ The SDK includes comprehensive test utilities:
 
 ## Architectural Rules
 
-The SDK enforces clean architecture through:
+The App Server enforces clean architecture through:
 
 - **Compile-time checks** - Gradle plugin prevents importing app-specific code
 - **Module boundaries** - Physical separation from business logic
@@ -377,11 +377,11 @@ The SDK enforces clean architecture through:
 
 ## License
 
-This SDK is designed to be open-sourced under Apache 2.0 license.
+This App Server is designed to be open-sourced under MIT license.
 
 ## Contributing
 
-When contributing to the SDK:
+When contributing to the App Server:
 
 1. **Maintain independence** - Never import app-specific packages
 2. **Follow conventions** - Use existing patterns and naming

@@ -36,11 +36,11 @@ public class AppRegistrationController {
     public AppRegistrationController(ShopManagementService shopManagementService,
                                      SignatureService signatureService,
                                      AppLookupService appLookupService,
-                                     AppServerProperties sdkProperties) {
+                                     AppServerProperties appServerProperties) {
         this.shopManagementService = shopManagementService;
         this.signatureService = signatureService;
         this.appLookupService = appLookupService;
-        this.sslOnly = sdkProperties.isSslOnly();
+        this.sslOnly = appServerProperties.isSslOnly();
     }
 
     @GetMapping("/register")

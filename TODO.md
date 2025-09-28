@@ -1,6 +1,6 @@
 # TODO - Improvements for Shopware App Server
 
-This document contains recommended improvements to make before publishing the SDK to Maven Central.
+This document contains recommended improvements to make before publishing the App Server to Maven Central.
 
 ## High Priority (Must Fix Before Publishing)
 
@@ -67,7 +67,7 @@ This document contains recommended improvements to make before publishing the SD
 
 ### 6. Configuration Validation
 
-- [ ] **Add validation for AppBackendSdkProperties**
+- [ ] **Add validation for AppServerProperties**
   - Validate required configuration at startup
   - Provide clear error messages for misconfigurations
   - Consider using @Validated and @ConfigurationProperties validation
@@ -139,7 +139,7 @@ This document contains recommended improvements to make before publishing the SD
   - Test signature verification with null/empty inputs
   - Test ObjectMapper serialization failures
 
-- [ ] **Add security-focused test cases** *(Priority 2 - Critical for SDK)*
+- [ ] **Add security-focused test cases** *(Priority 2 - Critical for App Server)*
   - Signature verification edge cases:
     - Signature with different algorithms
     - Timing attack resistance (constant-time comparison)
@@ -198,7 +198,7 @@ This document contains recommended improvements to make before publishing the SD
 
 ```java
 public class ShopwareAppException extends RuntimeException {
-    // Base exception for all SDK-related errors
+    // Base exception for all App Server-related errors
 }
 
 public class InvalidSignatureException extends ShopwareAppException {

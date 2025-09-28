@@ -2,7 +2,7 @@
 <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
-    <changeSet author="Codebarista" id="set up database" context="sdk-core">
+    <changeSet author="Codebarista" id="set up database" context="app-server-core">
         <createTable tableName="SHOPWARE_SHOP">
             <column name="ID" type="int">
                 <constraints primaryKey="true" primaryKeyName="PK_SHOPWARE_SHOP_ID"/>

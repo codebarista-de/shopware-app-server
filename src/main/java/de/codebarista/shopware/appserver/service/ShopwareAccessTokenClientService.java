@@ -31,11 +31,11 @@ public class ShopwareAccessTokenClientService {
 
     public ShopwareAccessTokenClientService(RestTemplate restTemplate,
                                             ShopManagementService shopManagementService,
-                                            AppServerProperties sdkProperties) {
+                                            AppServerProperties appServerProperties) {
         this.restTemplate = restTemplate;
         this.shopManagementService = shopManagementService;
         tokenCache = new ConcurrentHashMap<>();
-        sslOnly = sdkProperties.isSslOnly();
+        sslOnly = appServerProperties.isSslOnly();
     }
 
     public String getAccessToken(ShopwareApp app, String shopId) {

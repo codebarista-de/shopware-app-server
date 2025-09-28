@@ -4,9 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Configuration properties for the Shopware App Server.
- * All properties use the prefix "app-backend.sdk".
  */
-@ConfigurationProperties(prefix = "app-backend.sdk")
+@ConfigurationProperties(prefix = "app-server")
 public class AppServerProperties {
 
     /**

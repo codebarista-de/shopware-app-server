@@ -32,12 +32,12 @@ public class AdminApiService implements AdminApi {
     public AdminApiService(RestTemplate restTemplate,
                            ShopManagementService shopManagementService,
                            ShopwareAccessTokenClientService shopwareAccessTokenClientService,
-                           AppServerProperties sdkProperties) {
+                           AppServerProperties appServerProperties) {
         this.restTemplate = restTemplate;
         restTemplate.setInterceptors(List.of(new HttpRequestResponseLoggingInterceptor()));
         this.shopManagementService = shopManagementService;
         this.shopwareAccessTokenClientService = shopwareAccessTokenClientService;
-        sslOnly = sdkProperties.isSslOnly();
+        sslOnly = appServerProperties.isSslOnly();
     }
 
     public void setPageSize(int pageSize) {

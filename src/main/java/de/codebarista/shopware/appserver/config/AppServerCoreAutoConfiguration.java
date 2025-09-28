@@ -19,11 +19,11 @@ public class AppServerCoreAutoConfiguration {
      * Configuration bean that provides App Server-wide settings.
      */
     @Bean
-    public AppBackendSdkConfiguration sdkConfiguration(AppServerProperties properties) {
+    public AppServerConfiguration appServerConfiguration(AppServerProperties properties) {
         LOGGER.debug("Configuring Shopware App Server with SSL-only: {}, localhost mapping: {}",
                 properties.isSslOnly(), properties.isMapLocalhostIPToLocalhostDomainName());
 
-        return AppBackendSdkConfiguration.builder()
+        return AppServerConfiguration.builder()
                 .sslOnly(properties.isSslOnly())
                 .mapLocalhostIPToLocalhostDomainName(properties.isMapLocalhostIPToLocalhostDomainName())
                 .httpRequestResponseLoggingEnabled(properties.isHttpRequestResponseLoggingEnabled())
@@ -34,12 +34,12 @@ public class AppServerCoreAutoConfiguration {
      * Nested configuration class that holds App Server settings.
      * Uses builder pattern for clean construction.
      */
-    public static class AppBackendSdkConfiguration {
+    public static class AppServerConfiguration {
         private final boolean sslOnly;
         private final boolean mapLocalhostIPToLocalhostDomainName;
         private final boolean httpRequestResponseLoggingEnabled;
 
-        private AppBackendSdkConfiguration(Builder builder) {
+        private AppServerConfiguration(Builder builder) {
             this.sslOnly = builder.sslOnly;
             this.mapLocalhostIPToLocalhostDomainName = builder.mapLocalhostIPToLocalhostDomainName;
             this.httpRequestResponseLoggingEnabled = builder.httpRequestResponseLoggingEnabled;
@@ -81,8 +81,8 @@ public class AppServerCoreAutoConfiguration {
                 return this;
             }
 
-            public AppBackendSdkConfiguration build() {
-                return new AppBackendSdkConfiguration(this);
+            public AppServerConfiguration build() {
+                return new AppServerConfiguration(this);
             }
         }
     }

@@ -18,30 +18,30 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 
 
 /**
- * Central security configuration for the Shopware SDK.
+ * Central security configuration for the Shopware App Server.
  * <p>
- * This class defines the security rules for all SDK-specific endpoints under:
+ * This class defines the security rules for all App Server-specific endpoints under:
  * <ul>
  *   <li>{@code /shopware/api/v1/**} – API endpoints for Shopware integration.</li>
  *   <li>{@code /shopware/admin/**} – Admin extension endpoints (e.g., for serving assets).</li>
  * </ul>
  * <p>
  * The security configuration is applied with high priority ({@link Order @Order(1)})
- * to ensure SDK rules are evaluated before any application-specific security rules.
+ * to ensure App Server rules are evaluated before any application-specific security rules.
  * <p>
  * <h2>Security Features</h2>
  * <ul>
  *   <li>
  *     <strong>Stateless Sessions:</strong>
- *     All SDK endpoints are stateless (no session cookies).
+ *     All App Server endpoints are stateless (no session cookies).
  *   </li>
  *   <li>
  *     <strong>CSRF Protection Disabled:</strong>
- *     CSRF protection is disabled for SDK endpoints (assumes API clients use tokens/signatures).
+ *     CSRF protection is disabled for App Server endpoints (assumes API clients use tokens/signatures).
  *   </li>
  *   <li>
  *     <strong>Signature Verification:</strong>
- *     All requests to SDK endpoints are verified using the {@link ShopwareSignatureVerificationFilter}.
+ *     All requests to App Server endpoints are verified using the {@link ShopwareSignatureVerificationFilter}.
  *     This filter is <em>mandatory</em> and cannot be disabled in the current version.
  *   </li>
  *   <li>
@@ -53,7 +53,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
  * <p>
  * <h2>Customization</h2>
  * <p>
- * The SDK provides default implementations for:
+ * The App Server provides default implementations for:
  * <ul>
  *   <li>
  *     {@link PasswordEncoder}: A {@link BCryptPasswordEncoder} is provided by default.
@@ -62,7 +62,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
  * </ul>
  * <p>
  * <strong>Note:</strong>
- * This configuration <em>only</em> applies to SDK endpoints ({@code /shopware/**}).
+ * This configuration <em>only</em> applies to App Server endpoints ({@code /shopware/**}).
  * Application endpoints must be secured separately in the host application.
  * <p>
  * <h2>Example: Overriding Default Beans</h2>

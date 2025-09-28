@@ -12,25 +12,25 @@ import javax.sql.DataSource;
 
 /**
  * Auto-configuration for Shopware App Server Liquibase setup.
- * Provides SDK core migrations that run before any user-defined migrations.
+ * Provides App Server core migrations that run before any user-defined migrations.
  */
 @AutoConfiguration(before = LiquibaseAutoConfiguration.class)
 @ConditionalOnClass(SpringLiquibase.class)
 public class AppServerLiquibaseAutoConfiguration {
 
     /**
-     * Creates Liquibase instance for SDK core migrations.
-     * This runs automatically to ensure core SDK tables exist.
+     * Creates Liquibase instance for App Server core migrations.
+     * This runs automatically to ensure core App Server tables exist.
      * Uses a separate changelog and context to avoid conflicts with user migrations.
      */
-    @Bean("sdkLiquibase")
+    @Bean("appServerLiquibase")
     @Primary
-    @ConditionalOnProperty(name = "app-backend.sdk.liquibase.enabled", havingValue = "true", matchIfMissing = true)
-    public SpringLiquibase sdkLiquibase(DataSource dataSource) {
+    @ConditionalOnProperty(name = "app-server.liquibase.enabled", havingValue = "true", matchIfMissing = true)
+    public SpringLiquibase appServerLiquibase(DataSource dataSource) {
         SpringLiquibase liquibase = new SpringLiquibase();
         liquibase.setDataSource(dataSource);
-        liquibase.setChangeLog("classpath:db/changelog/sdk-changelog-master.xml");
-        liquibase.setContexts("sdk-core");
+        liquibase.setChangeLog("classpath:db/changelog/app-server-changelog-master.xml");
+        liquibase.setContexts("app-server-core");
         liquibase.setShouldRun(true);
         return liquibase;
     }
