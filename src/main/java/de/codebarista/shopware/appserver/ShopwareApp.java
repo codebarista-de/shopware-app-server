@@ -1,4 +1,4 @@
-package de.codebarista.shopware.appserver.service;
+package de.codebarista.shopware.appserver;
 
 import de.codebarista.shopware.appserver.api.dto.action.ActionRequestDto;
 import de.codebarista.shopware.appserver.api.dto.action.ActionResponseDto;

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.codebarista.shopware.appserver.api.dto.registration.ShopwareAppConfirmationDto;
 import de.codebarista.shopware.appserver.api.dto.registration.ShopwareAppRegistrationResponseDto;
 import de.codebarista.shopware.appserver.model.ShopwareShopEntityRepository;
-import de.codebarista.shopware.appserver.service.ShopwareApp;
 import de.codebarista.shopware.testutils.TestAppA;
 import de.codebarista.shopware.testutils.TestAppB;
 import de.codebarista.shopware.testutils.TestHelper;

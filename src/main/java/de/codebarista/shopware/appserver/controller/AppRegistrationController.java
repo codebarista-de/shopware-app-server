@@ -5,7 +5,7 @@ import de.codebarista.shopware.appserver.api.dto.registration.ShopwareAppRegistr
 import de.codebarista.shopware.appserver.config.AppServerProperties;
 import de.codebarista.shopware.appserver.service.AppLookupService;
 import de.codebarista.shopware.appserver.service.ShopManagementService;
-import de.codebarista.shopware.appserver.service.ShopwareApp;
+import de.codebarista.shopware.appserver.ShopwareApp;
 import de.codebarista.shopware.appserver.service.SignatureService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;

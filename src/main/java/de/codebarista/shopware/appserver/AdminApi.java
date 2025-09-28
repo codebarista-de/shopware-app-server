@@ -1,4 +1,4 @@
-package de.codebarista.shopware.appserver.service;
+package de.codebarista.shopware.appserver;
 
 import de.codebarista.shopware.appserver.service.dto.search.SearchQuery;
 import de.codebarista.shopware.appserver.service.dto.search.SearchResult;

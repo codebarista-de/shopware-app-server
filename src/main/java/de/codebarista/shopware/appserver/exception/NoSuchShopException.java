@@ -1,6 +1,6 @@
 package de.codebarista.shopware.appserver.exception;
 
-import de.codebarista.shopware.appserver.service.ShopwareApp;
+import de.codebarista.shopware.appserver.ShopwareApp;
 
 public class NoSuchShopException extends ShopwareAppException {
     public NoSuchShopException(String message) {

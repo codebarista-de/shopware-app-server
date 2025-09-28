@@ -1,7 +1,7 @@
 package de.codebarista.shopware.appserver.controller;
 
 import de.codebarista.shopware.appserver.service.AppLookupService;
-import de.codebarista.shopware.appserver.service.TokenService;
+import de.codebarista.shopware.appserver.TokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;

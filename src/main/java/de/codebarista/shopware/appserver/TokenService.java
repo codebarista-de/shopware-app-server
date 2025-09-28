@@ -1,4 +1,4 @@
-package de.codebarista.shopware.appserver.service;
+package de.codebarista.shopware.appserver;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;

@@ -1,5 +1,7 @@
 package de.codebarista.shopware.appserver.service;
 
+import de.codebarista.shopware.appserver.ShopwareApp;
+import de.codebarista.shopware.appserver.TokenService;
 import de.codebarista.shopware.appserver.exception.InvalidTokenException;
 import de.codebarista.shopware.appserver.model.ShopwareShopEntity;
 import jakarta.annotation.Nonnull;

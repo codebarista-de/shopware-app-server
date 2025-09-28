@@ -1,6 +1,7 @@
 package de.codebarista.shopware.appserver.service;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
+import de.codebarista.shopware.appserver.ShopwareApp;
 import de.codebarista.shopware.appserver.config.AppServerProperties;
 import de.codebarista.shopware.appserver.exception.InvalidShopUrlException;
 import de.codebarista.shopware.appserver.exception.NoSuchShopException;

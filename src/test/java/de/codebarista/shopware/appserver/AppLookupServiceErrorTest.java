@@ -2,7 +2,6 @@ package de.codebarista.shopware.appserver;
 
 import de.codebarista.shopware.appserver.exception.NoSuchAppException;
 import de.codebarista.shopware.appserver.service.AppLookupService;
-import de.codebarista.shopware.appserver.service.ShopwareApp;
 import de.codebarista.shopware.testutils.TestAppA;
 import de.codebarista.shopware.testutils.TestAppB;
 import org.junit.jupiter.api.BeforeEach;

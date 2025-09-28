@@ -3,7 +3,7 @@ package de.codebarista.shopware.testutils;
 import de.codebarista.shopware.appserver.api.dto.action.ActionRequestDto;
 import de.codebarista.shopware.appserver.api.dto.action.ActionResponseDto;
 import de.codebarista.shopware.appserver.api.dto.event.ShopwareEventDto;
-import de.codebarista.shopware.appserver.service.ShopwareApp;
+import de.codebarista.shopware.appserver.ShopwareApp;
 import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Component;
 

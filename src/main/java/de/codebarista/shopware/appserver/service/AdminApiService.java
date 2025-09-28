@@ -1,5 +1,7 @@
 package de.codebarista.shopware.appserver.service;
 
+import de.codebarista.shopware.appserver.AdminApi;
+import de.codebarista.shopware.appserver.ShopwareApp;
 import de.codebarista.shopware.appserver.config.AppServerProperties;
 import de.codebarista.shopware.appserver.model.ShopwareShopEntity;
 import de.codebarista.shopware.appserver.service.dto.CreateShopwareNotificationDto;

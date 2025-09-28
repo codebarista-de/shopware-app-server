@@ -1,5 +1,6 @@
 package de.codebarista.shopware.appserver.service;
 
+import de.codebarista.shopware.appserver.ShopwareApp;
 import de.codebarista.shopware.appserver.exception.NoSuchAppException;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;

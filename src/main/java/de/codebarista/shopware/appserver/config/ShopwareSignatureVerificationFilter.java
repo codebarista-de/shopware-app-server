@@ -6,7 +6,7 @@ import de.codebarista.shopware.appserver.api.ApiConstants;
 import de.codebarista.shopware.appserver.model.ShopwareShopEntity;
 import de.codebarista.shopware.appserver.service.AppLookupService;
 import de.codebarista.shopware.appserver.service.ShopManagementService;
-import de.codebarista.shopware.appserver.service.ShopwareApp;
+import de.codebarista.shopware.appserver.ShopwareApp;
 import de.codebarista.shopware.appserver.service.SignatureService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

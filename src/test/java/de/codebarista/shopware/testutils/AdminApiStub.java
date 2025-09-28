@@ -1,7 +1,7 @@
 package de.codebarista.shopware.testutils;
 
-import de.codebarista.shopware.appserver.service.AdminApi;
-import de.codebarista.shopware.appserver.service.ShopwareApp;
+import de.codebarista.shopware.appserver.AdminApi;
+import de.codebarista.shopware.appserver.ShopwareApp;
 import de.codebarista.shopware.appserver.service.dto.search.SearchQuery;
 import de.codebarista.shopware.appserver.service.dto.search.SearchResult;
 import de.codebarista.shopware.appserver.service.dto.sync.SyncResult;

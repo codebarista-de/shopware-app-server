@@ -3,7 +3,6 @@ package de.codebarista.shopware.appserver;
 import de.codebarista.shopware.appserver.model.ShopwareShopEntity;
 import de.codebarista.shopware.appserver.service.AppLookupService;
 import de.codebarista.shopware.appserver.service.ShopManagementService;
-import de.codebarista.shopware.appserver.service.TokenService;
 import de.codebarista.shopware.testutils.TestAppA;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
