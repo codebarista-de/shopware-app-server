@@ -34,6 +34,11 @@ public class AdminApiStub implements AdminApi {
     }
 
     @Override
+    public <T> void postEntity(ShopwareApp app, String shopId, String entity, T requestDto) {
+        throw new RuntimeException("Method 'postEntity' not implemented in stub");
+    }
+
+    @Override
     public <T> @Nonnull List<T> search(ShopwareApp app, String shopId, String entityName, SearchQuery query,
                                        Class<? extends SearchResult<T>> responseType, String shopwareLanguageId) {
         return List.of();

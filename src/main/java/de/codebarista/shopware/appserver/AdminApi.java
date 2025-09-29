@@ -17,6 +17,12 @@ public interface AdminApi {
 
     void pushErrorMessage(ShopwareApp app, String shopId, String message);
 
+    <T> void postEntity(ShopwareApp app, String shopId, String entity, T requestDto);
+
+    // TODO: also expose a postObject(Shopware app, String, shop Id, URI url, data, headers) to post e.g. PDF-Documents
+
+    //TODO: also expose a getObject(ShopwareApp app, String shopId, url-part, Class<T> responseType)
+
     /**
      * Searches all instances of an entity that match the query
      *
