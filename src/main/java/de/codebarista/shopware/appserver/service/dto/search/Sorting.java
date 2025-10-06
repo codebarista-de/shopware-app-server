@@ -29,4 +29,9 @@ public class Sorting {
         order = Order.ASCENDING;
         return this;
     }
+
+    public Sorting natural(Boolean natural) {
+        naturalSorting = natural;
+        return this;
+    }
 }
