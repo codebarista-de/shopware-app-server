@@ -25,6 +25,9 @@ public class SearchQuery {
     @JsonProperty("includes")
     private Map<String, List<String>> includes;
 
+    @JsonProperty("fields")
+    private Map<String, List<String>> fields;
+
     @JsonProperty("ids")
     private Collection<String> ids;
 
@@ -52,11 +55,37 @@ public class SearchQuery {
         return this;
     }
 
+    /**
+     * Fields to include in the response.
+     * <p>
+     * In contrast to {@link SearchQuery#fields(String, String...)}, includes works as post-output processing,
+     * so the complete entity is loaded in the backend side and then filtered.
+     * @param entityName the name of the entity for which only the specified fields shall be included in the response
+     * @param fields the names of the fields to include in the response
+     * @return this search query
+     */
     public SearchQuery includes(String entityName, String... fields) {
         if (includes == null) {
             includes = new HashedMap<>();
         }
         includes.put(entityName, Arrays.asList(fields));
+        return this;
+    }
+
+    /**
+     * Fields to include in the database query.
+     * <p>
+     * Filters for specific fields on database level.
+     * This means that the database only loads the requested fields and not the whole entity.
+     * @param entityName the name of the entity for which only the specified fields shall be queries from the database
+     * @param fields the names of the fields to query
+     * @return this search query
+     */
+    public SearchQuery fields(String entityName, String... fields) {
+        if (this.fields == null) {
+            this.fields = new HashedMap<>();
+        }
+        this.fields.put(entityName, Arrays.asList(fields));
         return this;
     }
 
