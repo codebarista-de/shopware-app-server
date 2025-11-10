@@ -74,12 +74,7 @@ public class TokenServiceImpl implements TokenService {
         return !isTokenExpired(token);
     }
 
-    /**
-     * Checks if the given token has expired based on its embedded timestamp.
-     *
-     * @param token the token to check for expiration
-     * @return true if the token has expired, false otherwise
-     */
+    @Override
     public boolean isTokenExpired(@Nonnull String token) {
         if (token.length() < TOKEN_TIME_LENGTH) {
             return true; // Invalid token format, consider expired

@@ -27,7 +27,7 @@ public class ShopwareShopEntity {
     /**
      * Host of shop which identifies the shop, e.g. "myshop.mydomain.de"
      */
-    @Column(name = "SHOP_HOST", nullable = false) // TODO: rename column
+    @Column(name = "SHOP_HOST", nullable = false)
     private String shopHost;
 
     /**

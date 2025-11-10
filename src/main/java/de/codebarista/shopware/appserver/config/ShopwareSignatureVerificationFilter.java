@@ -27,6 +27,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
+ * Check the {@code shopware-shop-signature} header.
+ * <p>
  * This filter cannot be a bean, we only want to apply it to specific App-Server URLs.
  * A GenericFilter bean in Spring Boot is automatically used for any request.
  * This is undesired as it must not apply to all URLs exposed by App implementations.

@@ -8,6 +8,11 @@ import jakarta.annotation.Nullable;
 
 import java.util.Locale;
 
+/**
+ * Represents an App Backend for a Shopware App.
+ * <p>
+ * Implementations need to be Spring Beans.
+ */
 public interface ShopwareApp {
     /**
      * The subdomain of the app, which is used to map requests to apps and therefore called app-key.
@@ -116,7 +121,29 @@ public interface ShopwareApp {
      */
     void onDeleteShop(@Nonnull String shopHost, @Nonnull String shopId, long internalShopId);
 
+    /**
+     * Method that is invoked when an Event from a Webhook is triggered, to that the App is subscribed to in the manifest.xml.
+     * TODO
+     *
+     * @param event
+     * @param internalShopId the ID which identifies the shop in this app-backend service instance
+     * @param userLocale
+     * @param shopwareLanguageId
+     */
     void onEvent(@Nonnull ShopwareEventDto event, long internalShopId, @Nullable Locale userLocale, @Nullable String shopwareLanguageId);
 
-    @Nonnull ActionResponseDto<?> onAction(@Nonnull ActionRequestDto action, long internalShopId, @Nullable Locale userLocale, @Nullable String shopwareLanguageId);
+    /**
+     * Method that is invoked when an Action, that is defined in the App's manifest.xml, is triggered.
+     * As a response a notification can be displayed in Shopware, a modal dialog or a new tab can be opened
+     * or the page can be refreshed.
+     * <p>
+     * Return {@code null} to disable Action handling. In this case Action requests will be responded with a 401 (UNAUTHORIZED).
+     *
+     * @param action Those endpoints are called when an Action button is clicked or a Shopware event occurs, that the App registered to in the `manifest.xml`.
+     * @param internalShopId the ID which identifies the shop in this app-backend service instance
+     * @param userLocale
+     * @param shopwareLanguageId
+     * @return a response to the Action or {@code null}, if action handling is disabled.
+     */
+    @Nullable ActionResponseDto<?> onAction(@Nonnull ActionRequestDto action, long internalShopId, @Nullable Locale userLocale, @Nullable String shopwareLanguageId);
 }
