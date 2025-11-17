@@ -3,9 +3,9 @@
 **A Java Spring Boot library for building a Shopware 6 App Backend server.**
 
 Unlike a Shopware Plugin, a [Shopware App][1] cannot directly extend or modify the core functionality of a Shopware
-shop using PHP code. If the desired features cannot be fully realized with [App Scripts][2]
-or [Storefront templates and JavaScript][3], the app must rely on its own backend service --
-and this is where the app-server comes into the game.
+shop using PHP code. When the desired features cannot be fully realized with [App Scripts][2]
+or [Storefront templates and JavaScript][3], the app must rely on its own backend service—this is where the App Server
+comes into play.
 
 [1]: https://developer.shopware.com/docs/concepts/extensions/apps-concept.html
 
@@ -22,56 +22,55 @@ This library provides the core components needed to build such an App Backend:
 
 [4]: https://developer.shopware.com/docs/guides/plugins/apps/app-signature-verification.html
 
-## You need your own Backend Service?
+## Do You Need Your Own Backend Service?
 
-If you need your own App Backend for your Shopware App, your *App* will consist of two coupled artifacts:
+If your Shopware App requires its own backend service, your application will consist of two coupled artifacts:
 
-1. The actual **Shopware App**: the artifact that is installed in Shopware shops and contains at least the
-   `manifest.xml`.
-2. The **App Backend**: the backend service that serves the requests from your Shopware App and is build upon this
-   library -- the App Server library.
+1. The **Shopware App**: The artifact installed in Shopware shops, containing at least the `manifest.xml` file.
+2. The **App Backend**: The backend service that handles requests from your Shopware App, built upon this library.
 
-Both are glued together by endpoints exposed by the App Backend and referenced in the `manifest.xml`.
-The endpoints are then consumed by your app when its being installed in Shopware or used by the user.
-See the section about Endpoints exposed by the App Server library below.
+Both components are connected through endpoints exposed by the App Backend and referenced in the `manifest.xml`.
+These endpoints are invoked when your app is installed in Shopware or when users interact with it.
+See the section about endpoints exposed by the App Server library below.
 
-For a detailed description, information about how to configure your App Backend, read on here.
+For detailed configuration instructions and implementation guidance, continue reading.
 
 ## Quick Start
 
-For a quick start with examples, follow the Getting Started Guide TODO
+A comprehensive Getting Started Guide with step-by-step examples is coming soon.
+In the meantime, see the implementation example in the "Start implementing your App Backend" section below.
 
 ## The App Server
 
-The App Server library allows to have multiple **App Backend implementations** -- one per Shopware App --
-within your single **App Server** service.
+The App Server library allows you to host multiple **App Backend implementations**—one per Shopware App—within a single
+**App Server** service.
 
-Every App Backend implementation is identified by its own App Key and invoked upon requests from the corresponding
-Shopware App to a defined subdomain.
+Each App Backend implementation is identified by its unique App Key and invoked when requests arrive
+from the corresponding Shopware App to its designated subdomain.
 
 ### App Subdomain
 
-Every app has to run on its own unique subdomain.
+Each app must run on its own unique subdomain.
 
-The subdomain must not contain dots, as everything from the first symbol until the first dot from the left
+The subdomain must not contain dots, as everything from the first character until the first dot (reading left to right)
 is considered the subdomain.
 
 ### App Key
 
-The subdomain is used as the **App Key**, all requests to this subdomain will be routed
-to the corresponding App Backend implementation. This is why the subdomain and the App Key must match.
+The subdomain serves as the **App Key**. All requests to this subdomain will be routed to the corresponding App Backend
+implementation.
+This is why the subdomain and App Key must match.
 
-If the name of your app is `my-shopware-app`, and your domain is `my-domain.de`,
-the registration endpoint will look like this:
-`https://my-shopware-app.my-domain.de/shopware/api/v1/registration/register`.
+For example, if your app name is `my-shopware-app` and your domain is `my-domain.de`, the registration endpoint will be:
+`https://my-shopware-app.my-domain.de/shopware/api/v1/registration/register`
 
-When implementing the app backend, you need to return the **App Key** from the `getAppKey` method
-of your `ShopwareApp` implementation.
+When implementing your App Backend, you must return the **App Key** from the `getAppKey()` method of your `ShopwareApp`
+implementation.
 
-### Start implementing your App Backend
+### Start Implementing Your App Backend
 
-After this consideration, start creating your own App Backend by implementing the `ShopwareApp` interface.
-Add the `@Component` annotation to make it a Spring Bean:
+Create your own App Backend by implementing the `ShopwareApp` interface. Add the `@Component` annotation to register it
+as a Spring Bean:
 
 ```java
 
@@ -86,8 +85,8 @@ public class MyShopwareApp implements ShopwareApp {
 
     @Override
     public String getAppSecret() {
-        // The shared secret that is used by shopware to sign requests to the app backend.
-        // During development or testing, this is probably the value of the <secret> tag from your manifest.xml
+        // The shared secret used by Shopware to sign requests to the app backend.
+        // During development or testing, this matches the <secret> tag value in your manifest.xml
         return "testsecret";
     }
 
@@ -100,31 +99,32 @@ public class MyShopwareApp implements ShopwareApp {
 }
 ```
 
-Now implement the methods to react on actions or webhooks or add your own REST Controller
-and add endpoints to your App Backend.
+Now implement the methods to respond to actions or webhooks, or add your own REST controllers with custom endpoints to
+your App Backend.
 
-See hints for local development below.
+See the "Local development and testing" section below for development guidance.
 
-## Endpoints exposed by the App Server
+## Endpoints Exposed by the App Server
 
-The App Server automatically registers endpoints and comes with its own Spring Security configuration.
-Incoming requests from Shopware to endpoints exposed by App Server library are automatically verified
-using HMAC-SHA256 signatures: it verifies the validity of the `shopware-shop-signature` header.
-See the `ShopwareSignatureVerificationFilter` for implementation.
+The App Server automatically registers endpoints and provides its own Spring Security configuration.
+Incoming requests from Shopware to these endpoints are automatically verified using HMAC-SHA256 signatures by validating
+the `shopware-shop-signature` header.
+See `ShopwareSignatureVerificationFilter` for the implementation details.
 
-> ⚠️ If you add your own endpoints, you need to protect them yourself. See section *Endpoints exposed by you*
+> ⚠️ **Important**: If you add your own custom endpoints, you must implement security measures yourself. See the
+> section "Endpoints exposed by you" below.
 
 ### App Registration Endpoints
 
 * `GET /shopware/api/v1/registration/register`
 * `POST /shopware/api/v1/registration/confirm`
 
-App registration and registration confirmation is handled by the App-Server library.
-Provide the correct URL to your app backend in the `<registrationUrl>` tag of the `manifest.xml`.
-For local development and testing also specify the `<secret>`.
-Return the same secret from the `getAppSecret` method of your `ShopwareApp` implementation.
+App registration and confirmation are handled automatically by the App Server library.
+Provide the correct URL in the `<registrationUrl>` tag of your `manifest.xml`.
+For local development and testing, also specify the `<secret>` tag.
+Return the same secret value from the `getAppSecret()` method of your `ShopwareApp` implementation.
 
-> ⚠️ Never commit credentials into version control!
+> ⚠️ **Never commit credentials to version control!**
 
 ### App Lifecycle Endpoints
 
@@ -133,28 +133,28 @@ Return the same secret from the `getAppSecret` method of your `ShopwareApp` impl
 * `POST /shopware/api/v1/lifecycle/activated`
 * `POST /shopware/api/v1/lifecycle/deactivated`
 
-After successful installation, those endpoints are called from Shopware when the respecting App lifecycle event occurs.
-Do not rely on them and implement your app backend to be tolerant.
+After successful installation, these endpoints are called by Shopware when the respective app lifecycle event occurs.
+Implement your app backend to handle these events gracefully and be tolerant of delivery failures.
 
 ### Shopware Event Endpoints
 
 * `POST /shopware/api/v1/action`
 * `POST /shopware/api/v1/event`
 
-Those endpoints are called when an Action button is clicked
-or a Shopware event occurs, that the App registered to in the `manifest.xml`.
+These endpoints are called when an action button is clicked or when a Shopware event occurs that the app has registered
+for in the `manifest.xml`.
 
 ### Admin Extension Endpoint
 
-TODO TODO TODO TODO TODO: make optional, make injection of data-token and data-version optional
-
 * `GET /shopware/admin/{admin-extension-folder}/{version}/index.html`
 
-This endpoint exposes the UI of your Shopware App, that will be rendered as i-frame within the Shopware Administration.
+This endpoint exposes the UI of your Shopware App, which will be rendered as an iframe within the Shopware
+Administration.
 
-Your UI must be build externally. It will then be served statically by the App Backend.
+Your UI must be built externally and will be served statically by the App Backend.
 
-### #TODO
+> **Note**: Future enhancements will make this endpoint optional and allow configuration of `data-token` and
+`data-version` injection.
 
 ## Configuration
 
@@ -251,11 +251,11 @@ spring:
 
 ### Database Migrations
 
-The App Server uses a **Liquibase setup** to separate core App Server migrations from your custom migrations:
+The App Server uses **Liquibase** to separate core App Server migrations from your custom migrations:
 
 **App Server Migrations (Automatic):**
 
-The App Server library relies on a database to store its data and runs the Liquibase migration on startup.
+The App Server library relies on a database to store its data and runs Liquibase migrations automatically on startup.
 
 - Runs automatically when the application starts
 - Creates core tables required by the App Server (`SHOPWARE_SHOP`, etc.)
@@ -264,7 +264,7 @@ The App Server library relies on a database to store its data and runs the Liqui
 
 **User Migrations (Optional):**
 
-If you need your own Database tables, you need to set this property to `true`:
+If you need your own database tables, set this property to `true`:
 
 ```yaml
 app-server:
@@ -272,9 +272,9 @@ app-server:
     user-migrations: true
 ```
 
-This disables the automatic App Server Migrations as described before.
-The App Server will not create a SpringLiquibase bean so that you can create one in your App Backend,
-either by configuration or Java.
+This disables the automatic App Server migrations described above.
+The App Server will not create a SpringLiquibase bean, allowing you to create one in your App Backend through either
+configuration or Java code.
 
 You then need to include the required App Server migrations into your Liquibase Changelog master file:
 
@@ -300,8 +300,6 @@ spring:
 ```
 
 ## HTTP Client Configuration
-
-TODO
 
 The App Server provides a pre-configured `RestTemplate` optimized for Shopware API communication:
 
@@ -333,31 +331,32 @@ ResponseEntity<String> response = shopwareRestTemplate.exchange(
         shopwareApiUrl, HttpMethod.GET, requestEntity, String.class);
 ```
 
-## Local development and testing
+## Local Development and Testing
 
-For local development and testing you can use `localhost` with e.g. port `8080` as your domain.
-In this case also set the `app-server.map-localhost-ip-to-localhost-domain-name` property to `true`.
-Don't forget to set it to `false` for production!
-Specify the port with the Spring Boot `server.port` property in your application settings.
+For local development and testing, you can use `localhost` with a port such as `8080` as your domain.
+Set the `app-server.map-localhost-ip-to-localhost-domain-name` property to `true` when using localhost.
+**Remember to set it back to `false` for production!**
+Specify the port using the Spring Boot `server.port` property in your application settings.
 
-For simplicity, you can also choose to use `http`.
-In this case also set the `app-server.ssl-only` property to `false`.
-Don't forget to set it to `true` for production!
+For development simplicity, you can use `http` instead of `https`.
+Set the `app-server.ssl-only` property to `false` to allow HTTP connections.
+**Remember to set it back to `true` for production!**
 
-## Glue the App Backend to your Shopware App
+## Connect the App Backend to Your Shopware App
 
-### The manifest.xml file
+### The manifest.xml File
 
-The `manifest.xml` needs to glue the Shopware App to the app backend. This is done by specifying the correct URLs.
+The `manifest.xml` file connects your Shopware App to the App Backend by specifying the correct URLs.
 
-Remember that every app has to run on its own unique subdomain, this is why all URLs start with `my-shopware-app`,
-followed by your domain and again followed by the respective endpoints exposed by the App Server library
-(see Framework Endpoints).
+Remember that each app must run on its own unique subdomain. This is why all URLs start with the app key (e.g.,
+`my-shopware-app`), followed by your domain, and then the respective endpoints exposed by the App Server library.
 
-For local development and testing you can use `localhost` as your domain,
-see App backend URL for local development and testing.
+For local development and testing, you can use `localhost` as your domain. See the "Local Development and Testing"
+section above for configuration details.
 
-#### URL for registering new App installations
+#### Registration URL
+
+Configure the registration endpoint in your `manifest.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -375,12 +374,12 @@ see App backend URL for local development and testing.
 
 ```
 
-Add the `<secret>` tag for local development and testing only. Before uploading your App artifact in your
-Shopware Account, remove this tag.
+Include the `<secret>` tag for local development and testing only. Remove this tag before uploading your app artifact to
+your Shopware account.
 
-#### URL for Admin Extension
+#### Admin Extension URL
 
-# #TODO
+Configure the admin extension base URL in your `manifest.xml`:
 
 ```xml
 
@@ -462,8 +461,8 @@ public void onEvent(ShopwareEventDto event, long internalShopId, @Nullable Local
 #### Notifications
 
 You
-can [send notification to the Administration](https://developer.shopware.com/docs/guides/plugins/apps/app-base-guide.html#app-notification),
-initiated by the backend. To allow your app to push such notifications, add these permissions:
+can [send notifications to the Administration](https://developer.shopware.com/docs/guides/plugins/apps/app-base-guide.html#app-notification)
+from your backend. To allow your app to push notifications, add these permissions:
 
 ```xml
 
@@ -481,13 +480,14 @@ Then you can use the `push{Success|Info|Warning|Error}Message` methods from the 
 
 ## App Backend Security
 
-### Endpoints exposed by you
+### Endpoints Exposed by You
 
 TODO
 
-The App Server can inject a token into the `index.html` of your Admin Extension
-that can be used for requests to your endpoints. To make this work, you need to add the string
-`data-token=""` to one of your tags, e.g. the `<body>` starting tag:
+When you add custom endpoints to your App Backend, you are responsible for implementing security.
+
+The App Server can inject a token into the `index.html` of your Admin Extension for use in authenticated requests to
+your endpoints. To enable this, add the `data-token=""` attribute to one of your HTML tags (e.g., the `<body>` tag):
 
 ```html
 <!doctype html>
@@ -504,14 +504,14 @@ that can be used for requests to your endpoints. To make this work, you need to 
 </html>
 ```
 
-The `data-token property will then be filled with a generated token valid for your Shopware App and App Backend.
+The `data-token` attribute will be populated with a generated token valid for your Shopware App and App Backend.
 
 TODO: TOKEN VALIDITY, ...
 
-> ⚠️ If you add your own endpoints you have to check authorization yourself
+> ⚠️ **Important**: You must implement authorization checks for your custom endpoints yourself.
 
 Send the token with your requests to the App Backend and verify its validity.
-The `TokenService` offers methods for this case, you can call them from e.g. a `@PreAuthorize` check:
+The `TokenService` provides methods for token validation. You can use them in `@PreAuthorize` checks:
 
 ```java
 
@@ -526,36 +526,32 @@ public ResponseEntity<AdminToolFeatureListDto> getFeatures(
 }
 ```
 
-Because your App Backend implementation is a Spring Bean, it will automatically be injected
-if you correctly reference it in the method signature.
+Your App Backend implementation is a Spring Bean and will be automatically injected when correctly referenced in the
+method signature.
 
-Do not forget to enable method security in your service: Add the `@EnableMethodSecurity` annotation
-to your Spring Boot Main class or Web Security class.
+Remember to enable method security by adding the `@EnableMethodSecurity` annotation to your Spring Boot main class or
+security configuration class.
 
-## Database
-
-Configure your database using standard Spring Boot `spring.datasource.*` properties.
-You should use Liquibase for
+## Database Tables
 
 The App Server automatically creates and manages these tables via Liquibase:
 
-- `shopware_shop` - Registered shop information
+- `SHOPWARE_SHOP` - Stores registered shop information and OAuth credentials
 
-TODO
+Configure your database using standard Spring Boot `spring.datasource.*` properties as described in the "Database"
+section above.
 
 ## License
 
-This App Server is designed to be open-sourced under MIT license.
+This project is licensed under the MIT License.
 
 ## Contributing
 
-TODO
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Support
 
-TODO
-
-## Testing
+For issues, questions, or feature requests, please open an issue on the project repository.
 
 TODO
 
