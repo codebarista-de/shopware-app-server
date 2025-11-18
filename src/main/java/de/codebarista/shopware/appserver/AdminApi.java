@@ -8,15 +8,59 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
+/**
+ * Service interface for interacting with the Shopware Admin API.
+ * <p>
+ * This interface provides methods to interact with Shopware shops via their Admin API,
+ * including sending notifications, searching entities, posting data, and executing sync operations.
+ * All operations are authenticated using OAuth tokens managed by the App Server.
+ */
 public interface AdminApi {
+    /**
+     * Pushes a success notification to the Shopware Administration UI.
+     *
+     * @param app     the app from which the notification is sent
+     * @param shopId  the Shopware shop ID to receive the notification
+     * @param message the message text to display
+     */
     void pushSuccessMessage(ShopwareApp app, String shopId, String message);
 
+    /**
+     * Pushes an info notification to the Shopware Administration UI.
+     *
+     * @param app     the app from which the notification is sent
+     * @param shopId  the Shopware shop ID to receive the notification
+     * @param message the message text to display
+     */
     void pushInfoMessage(ShopwareApp app, String shopId, String message);
 
+    /**
+     * Pushes a warning notification to the Shopware Administration UI.
+     *
+     * @param app     the app from which the notification is sent
+     * @param shopId  the Shopware shop ID to receive the notification
+     * @param message the message text to display
+     */
     void pushWarningMessage(ShopwareApp app, String shopId, String message);
 
+    /**
+     * Pushes an error notification to the Shopware Administration UI.
+     *
+     * @param app     the app from which the notification is sent
+     * @param shopId  the Shopware shop ID to receive the notification
+     * @param message the message text to display
+     */
     void pushErrorMessage(ShopwareApp app, String shopId, String message);
 
+    /**
+     * Posts (creates) a new entity instance to the Shopware Admin API.
+     *
+     * @param app        the app making the request
+     * @param shopId     the Shopware shop ID
+     * @param entity     the entity name (e.g., "product", "order")
+     * @param requestDto the entity data to post
+     * @param <T>        the type of the request DTO
+     */
     <T> void postEntity(ShopwareApp app, String shopId, String entity, T requestDto);
 
     // TODO: also expose a postObject(Shopware app, String, shop Id, URI url, data, headers) to post e.g. PDF-Documents
@@ -63,10 +107,41 @@ public interface AdminApi {
      */
     <T> @Nonnull T script(ShopwareApp app, String shopId, String hookName, Object requestBody, Class<T> responseClass);
 
+    /**
+     * Executes a sync operation against the Shopware Admin API.
+     * <p>
+     * The Sync API allows for bulk operations (create, update, delete) across multiple entities in a single request.
+     *
+     * @param app         the app making the request
+     * @param shopId      the Shopware shop ID
+     * @param requestBody the sync payload containing operations to perform
+     * @return the sync result indicating success or failure
+     */
     @Nonnull
     SyncResult sync(ShopwareApp app, String shopId, Object requestBody);
 
+    /**
+     * Executes a sync operation against the Shopware Admin API and deserializes the response.
+     * <p>
+     * The Sync API allows for bulk operations (create, update, delete) across multiple entities in a single request.
+     *
+     * @param app           the app making the request
+     * @param shopId        the Shopware shop ID
+     * @param requestBody   the sync payload containing operations to perform
+     * @param responseClass the class to deserialize the response into
+     * @param <T>           the type of the response
+     * @return the deserialized sync response
+     */
     <T> @Nonnull T sync(ShopwareApp app, String shopId, Object requestBody, Class<T> responseClass);
 
+    /**
+     * Creates a UriComponentsBuilder pre-configured with the shop's base URL.
+     * <p>
+     * Use this to construct custom URLs for accessing Shopware resources.
+     *
+     * @param app    the app making the request
+     * @param shopId the Shopware shop ID
+     * @return a UriComponentsBuilder initialized with the shop's URL
+     */
     UriComponentsBuilder getShopUrlBuilder(ShopwareApp app, String shopId);
 }

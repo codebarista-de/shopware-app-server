@@ -23,21 +23,24 @@ public interface ShopwareApp {
      *
      * @return a subdomain (e.g. "upload-app")
      */
-    @Nonnull String getAppKey();
+    @Nonnull
+    String getAppKey();
 
     /**
      * The shared secret that is used by shopware to sign requests to the app backend
      *
      * @return the app secret
      */
-    @Nonnull String getAppSecret();
+    @Nonnull
+    String getAppSecret();
 
     /**
      * The technical name of the Shopware app
      *
      * @return the app name
      */
-    @Nonnull String getAppName();
+    @Nonnull
+    String getAppName();
 
     /**
      * Version of the app backend.
@@ -46,9 +49,11 @@ public interface ShopwareApp {
      * attribute 'version' of the body element.
      * <p>
      * This returns the version of the app backend, not the app version installed in a specific shop.
+     *
      * @return the version of the app backend or null.
      */
-    @Nullable String getVersion();
+    @Nullable
+    String getVersion();
 
     /// The name of the app-folder in the shopware-admin-extension folder which contains the admin extension for this app.
     ///
@@ -88,7 +93,8 @@ public interface ShopwareApp {
     /// Both serve a different purpose.
     ///
     /// @return a sub-folder name or null if the app does not have an admin extension
-    @Nullable String getAdminExtensionFolderName();
+    @Nullable
+    String getAdminExtensionFolderName();
 
     /**
      * Invoked when a new shop is registered with the app backend.
@@ -122,13 +128,15 @@ public interface ShopwareApp {
     void onDeleteShop(@Nonnull String shopHost, @Nonnull String shopId, long internalShopId);
 
     /**
-     * Method that is invoked when an Event from a Webhook is triggered, to that the App is subscribed to in the manifest.xml.
-     * TODO
+     * Method that is invoked when an Event from a Webhook is triggered, to which the App is subscribed in the manifest.xml.
+     * <p>
+     * Define webhooks in your manifest.xml to receive notifications about Shopware events.
+     * When an event occurs in a shop, this method is called with the event details.
      *
-     * @param event
-     * @param internalShopId the ID which identifies the shop in this app-backend service instance
-     * @param userLocale
-     * @param shopwareLanguageId
+     * @param event              the event data sent by Shopware containing payload, event name, and source information
+     * @param internalShopId     the ID which identifies the shop in this app-backend service instance
+     * @param userLocale         the locale of the user who triggered the event, if available
+     * @param shopwareLanguageId the Shopware language ID for the context in which the event occurred
      */
     void onEvent(@Nonnull ShopwareEventDto event, long internalShopId, @Nullable Locale userLocale, @Nullable String shopwareLanguageId);
 
@@ -139,11 +147,12 @@ public interface ShopwareApp {
      * <p>
      * Return {@code null} to disable Action handling. In this case Action requests will be responded with a 401 (UNAUTHORIZED).
      *
-     * @param action Those endpoints are called when an Action button is clicked or a Shopware event occurs, that the App registered to in the `manifest.xml`.
-     * @param internalShopId the ID which identifies the shop in this app-backend service instance
+     * @param action             Those endpoints are called when an Action button is clicked or a Shopware event occurs, that the App registered to in the `manifest.xml`.
+     * @param internalShopId     the ID which identifies the shop in this app-backend service instance
      * @param userLocale
      * @param shopwareLanguageId
      * @return a response to the Action or {@code null}, if action handling is disabled.
      */
-    @Nullable ActionResponseDto<?> onAction(@Nonnull ActionRequestDto action, long internalShopId, @Nullable Locale userLocale, @Nullable String shopwareLanguageId);
+    @Nullable
+    ActionResponseDto<?> onAction(@Nonnull ActionRequestDto action, long internalShopId, @Nullable Locale userLocale, @Nullable String shopwareLanguageId);
 }
