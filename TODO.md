@@ -2,246 +2,310 @@
 
 This document contains recommended improvements to make before publishing the App Server to Maven Central.
 
-## High Priority (Must Fix Before Publishing)
+## Critical for Public Release
 
-### 1. Security Enhancements
+### 1. CI/CD Pipeline
+- [x] **Create GitHub Actions workflows**
+  - ✅ `ci.yaml` - Build and test on push/PR (with test result publishing)
+  - ✅ `publish-to-maven-central.yaml` - Automated publish with tagging and GitHub releases
+  - [ ] `codeql.yml` - Security analysis (optional, nice-to-have)
+  - **Status**: .github/workflows/ directory created with complete CI/CD pipeline
+  - ~~**Blocker**: Cannot ensure build quality without automated testing~~ **COMPLETE!**
 
-- [x] **Fix error message in SignatureService** (`SignatureService.java:33`) ✅
-  - ~~Current: "Could not initialize hash function SHA3-256"~~
-  - ~~Should be: "Could not initialize hash function SHA-256"~~
-  - ~~Algorithm is correct, just the error message is wrong~~
-  - **COMPLETED**: Error message now correctly shows "SHA-256"
+### 2. Version History and Tracking
+- [x] **Create CHANGELOG.md**
+  - Track version history and breaking changes
+  - Follow [Keep a Changelog](https://keepachangelog.com/) format
+  - Essential for users to understand what changed between versions
+  - **Blocker**: Required for professional open source projects
 
-- [x] **Replace generic RuntimeException with specific exceptions** (`TokenServiceImpl.java:29-31`) ✅
-  - ~~Create `InvalidTokenDataException` or similar domain-specific exception~~
-  - ~~Improves error handling and API clarity~~
-  - **COMPLETED**: Created domain-specific exception hierarchy with `ShopwareAppException` base class
+### 3. Example Project
+- [ ] **Create a working example application**
+  - The README mentions "Getting Started Guide TODO" (line 39)
+  - Need a demo app showing:
+    - Basic ShopwareApp implementation
+    - Webhook handling example
+    - Action button handling example
+    - Admin API usage examples
+  - Place in `examples/` or separate repository
+  - **Blocker**: Users need to see how to use the library
 
-### 2. Code Quality Issues
+### 4. Versioning Strategy
+- [x] **Define and document versioning policy**
+  - ✅ Created comprehensive VERSIONING.md with semantic versioning 2.0.0 commitment
+  - ✅ Documented when to release 1.0.0 (production-ready, stable API, >80% test coverage)
+  - ✅ Defined pre-release strategy (alpha, beta, RC, SNAPSHOT)
+  - ✅ Documented version support policy and deprecation process
+  - ✅ Included release process and breaking change migration guidelines
+  - Currently at `0.0.1` - version bump happens before public release
 
-- [x] **Resolve SignatureService TODO comments** (`SignatureService.java:16,24`) ✅
-  - ~~Decide: Convert to static helper methods OR keep as service with shared ObjectMapper~~
-  - ~~If keeping as service: Inject shared ObjectMapper bean instead of creating new instance~~
-  - ~~If converting to static: Remove @Component annotation and update usage~~
-  - **COMPLETED**: Kept as service with injected shared ObjectMapper and thread-safe MessageDigest
+### 5. Code TODOs in Source Files
+- [ ] **AdminApi.java:66** - Expose `postObject()` method for binary data (PDFs, etc.)
+- [ ] **AdminApi.java:68** - Expose `getObject()` method for generic GET requests
+- [x] **AppRegistrationController.java:83** - ~~Create error response template~~ (Removed - current implementation is clean and follows Spring best practices)
+- [ ] **ShopManagementService.java:87** - Add cleanup job for shops marked as deleted
+- [x] **ByteArrayServletInputStream.java:9** - Move to appropriate package (not config)
 
-- [x] **Make ShopwareSignatureVerificationFilter a proper bean** (`ShopwareSignatureVerificationFilter.java:28`) ✅
-  - ~~Remove TODO comment~~
-  - ~~Add proper auto-configuration~~
-  - ~~Consider making constructor public and adding @Component~~
-  - **COMPLETED**: Added @Component annotation, public constructor, and proper DI
+### 6. Build Configuration
+- [x] **Create settings.gradle**
+  - Define `rootProject.name = 'shopware-app-server'`
+  - Currently missing, which can cause issues in multi-project builds
 
-### 3. Nullability Annotations
+## High Priority (Strongly Recommended Before Publishing)
 
-- [x] **Add @NonNull/@Nullable annotations to public APIs** ✅
-  - ~~`ShopwareApp` interface methods (lines 20, 26, 32, 44, 85)~~
-  - ~~Service method parameters throughout codebase~~
-  - ~~Improves IDE support and documentation clarity~~
-  - **COMPLETED**: Standardized Jakarta annotations across all public APIs
+### 7. Community Guidelines
+- [ ] **Create CONTRIBUTING.md**
+  - How to contribute code
+  - Code style guidelines
+  - Testing requirements
+  - PR process and expectations
+  - Development environment setup
 
-### 4. Error Handling Improvements
+### 8. Release Process Documentation
+- [ ] **Document release workflow**
+  - How to cut a release
+  - GPG key setup for signing
+  - Sonatype credentials configuration
+  - Version bumping process
+  - Post-release checklist
 
-- [x] **Replace all generic RuntimeException with domain-specific exceptions** ✅
-  - ~~`SignatureService.java:39, 46, 53, 61, 87`~~
-  - ~~`TokenServiceImpl.java:30`~~
-  - ~~Create exception hierarchy: `ShopwareAppException` -> specific exceptions~~
-  - ~~Add proper error context and messages~~
-  - **COMPLETED**: Created comprehensive exception hierarchy with specific exception types
+### 9. GitHub Repository Setup
+- [ ] **Create issue templates**
+  - Bug report template
+  - Feature request template
+  - Question template
+- [ ] **Create PR template**
+  - Checklist for contributors
+  - Link to CONTRIBUTING.md
+- [ ] **Configure branch protection**
+  - Require PR reviews
+  - Require status checks to pass
+  - Protect main branch from force pushes
 
-## Medium Priority (Recommended Before Publishing)
+### 10. README Enhancements
+- [ ] **Add badges**
+  - Build status badge (GitHub Actions)
+  - Maven Central version badge
+  - Test coverage badge
+  - License badge
+- [ ] **Improve Installation section**
+  - Add complete Gradle dependency snippet
+  - Add Maven dependency snippet
+  - Specify minimum Java version clearly
+- [ ] **Add Quick Start code example**
+  - Replace "Getting Started Guide TODO" with actual working example
+  - Show minimal app implementation inline
 
-### 5. Performance Optimizations
-
-- [x] **Fix MessageDigest thread-safety issue** (`SignatureService.java:25`) ✅
-  - ~~MessageDigest is not thread-safe but used as instance field~~
-  - ~~Options:~~
-    - ~~Use ThreadLocal<MessageDigest>~~
-    - ~~Create new MessageDigest instances per operation~~
-    - ~~Synchronize access~~
-  - **COMPLETED**: Implemented ThreadLocal<MessageDigest> for thread-safe operation
-
-- [x] **ObjectMapper reuse** (`ShopwareSignatureVerificationFilter.java:43`) ✅
-  - ~~Inject shared ObjectMapper instead of creating new instance~~
-  - ~~Better performance and consistency with rest of application~~
-  - **COMPLETED**: Injected shared ObjectMapper bean in both SignatureService and ShopwareSignatureVerificationFilter
-
-### 6. Configuration Validation
-
+### 11. Configuration Validation
 - [ ] **Add validation for AppServerProperties**
   - Validate required configuration at startup
   - Provide clear error messages for misconfigurations
   - Consider using @Validated and @ConfigurationProperties validation
 
-- [ ] **Add configuration constraints documentation**
-  - Document valid ranges/values for configuration properties
-  - Add examples for common deployment scenarios
+### 12. Standardize Exception Handling
+- [ ] **Create consistent exception handling patterns**
+  - Document exception handling strategy for library users
+  - Ensure all exceptions extend ShopwareAppException
+  - Add exception hierarchy diagram to docs
 
-### 7. Logging Improvements
+## Medium Priority (Recommended for Production Readiness)
 
-- [ ] **Add structured logging with correlation IDs**
-  - Add request correlation IDs for tracing
-  - Use structured logging format (JSON) for production environments
-
-- [ ] **Reduce sensitive information in logs**
-  - Review all log statements for potential security leaks
-  - Mask or exclude sensitive data (tokens, secrets, signatures)
-
-### 8. API Consistency
-
-- [x] **Extract timestamp validation logic** (`TokenServiceImpl.java:76-78`) ✅
-  - ~~Create separate `isTokenExpired(String token)` method~~
-  - ~~Improves readability and testability~~
-  - **COMPLETED**: Created separate `isTokenExpired` method with improved logic and error handling
-
-- [ ] **Standardize exception handling patterns**
-  - Create consistent exception handling across all services
-  - Document exception handling strategy for users
-
-## Low Priority (Nice to Have)
-
-### 9. Documentation Improvements
-
-- [ ] **Add comprehensive JavaDoc to ShopwareApp interface**
-  - Document all method parameters and return values
-  - Include usage examples and best practices
-  - Document security considerations
+### 13. Documentation Improvements
+- [ ] **Complete JavaDoc for all public APIs**
+  - All public methods should have complete JavaDoc (mostly done)
+  - Include usage examples where helpful
+  - Document thread-safety guarantees
 
 - [ ] **Add security best practices guide**
   - Document signature verification process
   - Explain token lifecycle and security
   - Provide deployment security recommendations
+  - Secret management best practices
 
 - [ ] **Add troubleshooting guide**
-  - Common configuration issues
+  - Common configuration issues and solutions
   - Debugging signature verification problems
   - Performance tuning recommendations
+  - FAQ section
 
-### 10. Testing Enhancements
+### 14. Logging Improvements
+- [ ] **Add structured logging with correlation IDs**
+  - Add request correlation IDs for tracing
+  - Use structured logging format (JSON) for production environments
+  - Make correlation ID accessible to user code
 
-**Current Test Coverage Analysis** *(Completed 2025-09-25)*:
+- [ ] **Reduce sensitive information in logs**
+  - Review all log statements for potential security leaks
+  - Mask or exclude sensitive data (tokens, secrets, signatures)
+  - Add logging security guidelines to docs
 
-**✅ Already Covered:**
-- Basic unit tests: `SignatureServiceTest`, `TokenServiceTest`
-- Integration tests: `AppRegistrationApiTest`, `LifecycleEventApiTest`, `AdminExtensionApiTest`
-- Configuration tests: `SqliteConfigurationTest`
-- Test infrastructure: Good test utilities (`TestAppA/B`, `WebServerTest`, etc.)
+### 15. Testing Enhancements
 
-**❌ Major Gaps Identified:**
+**Current Test Coverage**: 17 test files, good basic coverage
 
-- [ ] **Add integration tests for error scenarios** *(Priority 1 - Most Important)*
-  - Test new domain-specific exceptions (`InvalidSignatureException`, `InvalidTokenException`, etc.)
-  - Test `isTokenExpired` method edge cases (exactly expired, invalid format, too short tokens)
+**Test Gaps to Address**:
+
+- [ ] **Add integration tests for error scenarios** *(Priority 1)*
+  - Test all domain-specific exceptions (InvalidSignatureException, InvalidTokenException, etc.)
+  - Test `isTokenExpired` method edge cases
   - Invalid signature verification with tampered data
   - Expired token handling in authentication flow
   - Malformed request bodies (invalid JSON, missing fields)
-  - Network failure simulation in `AdminApiService` and `ShopwareAccessTokenClientService`
+  - Network failure simulation in AdminApi
   - Database connection failures and transaction rollbacks
-  - Test signature verification with null/empty inputs
-  - Test ObjectMapper serialization failures
 
-- [ ] **Add security-focused test cases** *(Priority 2 - Critical for App Server)*
+- [ ] **Add security-focused test cases** *(Priority 2)*
   - Signature verification edge cases:
-    - Signature with different algorithms
-    - Timing attack resistance (constant-time comparison)
+    - Different algorithms, timing attack resistance
     - Very long signatures/payloads
     - Unicode and special character handling
   - Token validation boundary conditions:
     - Tokens exactly at TTL boundary
-    - Tokens with future timestamps
-    - Tokens with negative timestamps
-    - Token format validation (length, character set)
+    - Tokens with future/negative timestamps
+    - Token format validation
   - Authentication/authorization flows:
     - Shop registration with mismatched hosts
     - Registration confirmation with wrong credentials
-    - Authentication bypass attempts
     - Replay attack prevention
-    - SQL injection resistance in shop lookups
-  - Thread-safety verification for concurrent signature operations
+    - SQL injection resistance
+  - Thread-safety verification for concurrent operations
 
-- [ ] **Add performance/load tests** *(Priority 3 - Nice to Have)*
-  - High concurrent request handling:
-    - Multiple shops registering simultaneously
-    - Concurrent token validation requests
-    - ThreadLocal MessageDigest performance under load
-  - Memory usage under load:
-    - Memory leak detection in long-running tests
-    - ObjectMapper reuse efficiency
-    - Shop entity caching behavior
-  - Signature verification performance:
-    - Benchmark signature calculation vs verification
-    - Large payload signature handling
-    - Thread contention in signature service
-  - Database performance:
-    - Concurrent shop lookups
-    - Connection pool exhaustion scenarios
+- [ ] **Add performance/load tests** *(Priority 3)*
+  - High concurrent request handling
+  - Memory usage under load
+  - Signature verification performance benchmarks
+  - Database performance under concurrent access
 
-### 11. Build and Release Improvements
+## Low Priority (Nice to Have)
 
-- [ ] **Add code quality checks to build**
-  - SpotBugs or similar static analysis
-  - Checkstyle for code formatting consistency
-  - PMD for code quality rules
+### 16. Community and Governance
+- [ ] **Create CODE_OF_CONDUCT.md**
+  - Define community standards
+  - Specify enforcement procedures
+
+- [ ] **Create SECURITY.md**
+  - Security policy and vulnerability reporting process
+  - Supported versions
+  - Security update timeline commitments
+
+### 17. Automated Maintenance
+- [ ] **Set up automated dependency updates**
+  - Configure Dependabot or Renovate
+  - Auto-merge minor/patch updates with passing tests
 
 - [ ] **Add dependency vulnerability scanning**
   - OWASP dependency check
-  - Regular dependency updates
-  - Security advisory monitoring
+  - GitHub security advisories
+  - Regular dependency audit schedule
 
-- [ ] **Improve version management**
-  - Change version from `0.0.1` to `1.0.0` for first release
-  - Document versioning strategy (semantic versioning)
-  - Add release notes template
+### 18. Enhanced Publishing
+- [ ] **Set up GitHub Releases**
+  - Automated release notes generation
+  - Link to Maven Central artifacts
+  - Include migration guides for breaking changes
 
-## Implementation Notes
+- [ ] **Publish JavaDoc**
+  - Host on javadoc.io or GitHub Pages
+  - Link from README
+  - Update with each release
 
-### Exception Hierarchy Suggestion
+- [ ] **Set up code coverage reporting**
+  - Integrate Codecov or Coveralls
+  - Add coverage badge to README
+  - Fail builds on coverage decrease
 
-```java
-public class ShopwareAppException extends RuntimeException {
-    // Base exception for all App Server-related errors
-}
+### 19. Advanced Examples
+- [ ] **Create multi-module example project**
+  - Show how to use in larger applications
+  - Demonstrate testing strategies
+  - Show integration with other Spring Boot features
 
-public class InvalidSignatureException extends ShopwareAppException {
-    // Signature verification failures
-}
+- [ ] **Create Docker example**
+  - Containerized demo application
+  - docker-compose.yml for local testing with Shopware
+  - Production-ready Dockerfile example
 
-public class InvalidTokenException extends ShopwareAppException {
-    // Token validation failures
-}
+- [ ] **Create deployment guides**
+  - Cloud deployment examples (AWS, GCP, Azure)
+  - Kubernetes deployment manifests
+  - Performance tuning for production
 
-public class ShopConfigurationException extends ShopwareAppException {
-    // Shop setup/configuration issues
-}
-```
+### 20. Build Quality Tools
+- [ ] **Add static analysis tools**
+  - SpotBugs for bug detection
+  - Checkstyle for code formatting consistency
+  - PMD for code quality rules
+  - Configure in Gradle build
 
-### Thread-Safe SignatureService Approach
+- [ ] **Add mutation testing**
+  - PIT mutation testing for test quality
+  - Ensure tests actually verify behavior
 
-```java
-// Option 1: ThreadLocal (recommended)
-private static final ThreadLocal<MessageDigest> HASH_DIGEST =
-    ThreadLocal.withInitial(() -> {
-        try {
-            return MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 not available", e);
-        }
-    });
+## Completed Items ✅
 
-// Option 2: Create per operation
-public String hash(String data) {
-    try {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        // ... rest of implementation
-    } catch (NoSuchAlgorithmException e) {
-        throw new RuntimeException("SHA-256 not available", e);
-    }
-}
-```
+### Security Enhancements
+- [x] Fix error message in SignatureService (SHA3-256 → SHA-256)
+- [x] Replace generic RuntimeException with specific exceptions
+- [x] Create domain-specific exception hierarchy
 
-## Priority Assessment
+### Code Quality
+- [x] Resolve SignatureService TODO comments
+- [x] Make ShopwareSignatureVerificationFilter a proper bean
+- [x] Add @NonNull/@Nullable annotations to public APIs
+- [x] Move ByteArrayServletInputStream to util package (proper separation of concerns)
+- [x] Remove unnecessary TODO from AppRegistrationController (buildConfirmationUrl already uses Spring best practices)
 
-- **High Priority**: Must be fixed before publishing to ensure security and code quality
-- **Medium Priority**: Should be addressed for production readiness and performance
-- **Low Priority**: Enhances user experience and maintainability but not blocking
+### Performance
+- [x] Fix MessageDigest thread-safety issue (implemented ThreadLocal)
+- [x] ObjectMapper reuse (injected shared bean)
 
-Total estimated effort: 2-3 days for High + Medium priority items.
+### API Improvements
+- [x] Extract timestamp validation logic (created isTokenExpired method)
+
+### Documentation
+- [x] Add comprehensive JavaDoc to all library interfaces
+- [x] Document ShopwareApp interface methods
+- [x] Document AdminApi methods
+- [x] Document TokenService
+- [x] Document DTOs and utility classes
+- [x] Improve README.md structure and clarity
+- [x] Create CHANGELOG.md following Keep a Changelog format
+- [x] Create VERSIONING.md with comprehensive semantic versioning policy
+  - Semantic versioning 2.0.0 commitment
+  - Pre-release strategy (alpha, beta, RC)
+  - Version support and EOL policy
+  - Release process documentation
+  - Breaking change and deprecation guidelines
+  - When to release 1.0.0 criteria
+
+### Build & Configuration
+- [x] Create settings.gradle file with proper rootProject.name
+
+### CI/CD
+- [x] Create GitHub Actions CI workflow (ci.yaml) for automated build and test on push/PR
+  - Builds with Java 17 on Ubuntu
+  - Runs full test suite with Gradle caching
+  - Uploads test results, reports, and coverage as artifacts
+  - Publishes test results to PR checks
+- [x] Create GitHub Actions publish workflow (publish-to-maven-central.yaml)
+  - Manual trigger via workflow_dispatch
+  - Gradle dependency caching for faster builds
+  - Version extraction from build.gradle
+  - Tag existence validation (prevents duplicate releases)
+  - SNAPSHOT version validation (blocks accidental snapshot publishes)
+  - Runs tests before publishing
+  - Publishes to Maven Central staging area
+  - Creates git tags with "v" prefix (e.g., v0.0.1)
+  - Auto-generates GitHub Releases with installation instructions
+  - Includes manual release reminder for Maven Central Portal
+
+## Estimated Effort
+
+- **Critical items (1-6)**: 3-5 days
+- **High Priority items (7-12)**: 2-3 days
+- **Medium Priority items (13-15)**: 3-4 days
+- **Low Priority items (16-20)**: 5-7 days (ongoing)
+
+**Minimum for Public Release**: Complete all Critical items (~1 week)
+
+**Recommended for 1.0.0 Release**: Critical + High Priority (~2 weeks)

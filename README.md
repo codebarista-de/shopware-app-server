@@ -545,6 +545,20 @@ section above.
 
 This project is licensed under the MIT License.
 
+## Versioning
+
+This project follows [Semantic Versioning 2.0.0](https://semver.org/).
+For detailed information about our versioning policy, release process, and upgrade guidelines,
+see [VERSIONING.md](VERSIONING.md).
+
+**Quick summary:**
+
+- **Breaking changes** increment the MAJOR version (e.g., 1.x.x → 2.0.0)
+- **New features** increment the MINOR version (e.g., 1.1.x → 1.2.0)
+- **Bug fixes** increment the PATCH version (e.g., 1.1.1 → 1.1.2)
+
+See [CHANGELOG.md](CHANGELOG.md) for a detailed list of changes in each release.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

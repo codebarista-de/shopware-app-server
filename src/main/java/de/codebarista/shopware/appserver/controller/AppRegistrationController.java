@@ -80,7 +80,6 @@ public class AppRegistrationController {
             scheme = "http";
         }
 
-        // TODO: make template
         return ServletUriComponentsBuilder.fromRequestUri(servletRequest)
                 .replacePath(null)
                 .scheme(scheme)

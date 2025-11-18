@@ -1,5 +1,6 @@
 package de.codebarista.shopware.appserver.config;
 
+import de.codebarista.shopware.appserver.util.ByteArrayServletInputStream;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
