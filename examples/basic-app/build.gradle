@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.1'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.example'
+version = '0.0.1'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    // Shopware App Server library
+    implementation 'de.codebarista:shopware-app-server:0.0.1'
+
+    // Optional: Add if you need to work with Shopware API models
+    // implementation 'de.codebarista:shopware-model:X.Y.Z'
+}
