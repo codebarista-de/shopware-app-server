@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.codebarista.shopware.appserver.service.AppLookupService;
 import de.codebarista.shopware.appserver.service.ShopManagementService;
 import de.codebarista.shopware.appserver.service.SignatureService;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -68,7 +67,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
  * Application endpoints must be secured separately in the host application.
  * See {@link de.codebarista.shopware.appserver.TokenService}
  */
-@Configuration
+@AutoConfiguration(after = AppServerServiceAutoConfiguration.class)
 public class AppServerWebSecurityConfiguration {
 
     public static final String ROLE_SHOPWARE_SHOP = "ROLE_SHOPWARE_SHOP";

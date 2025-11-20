@@ -13,7 +13,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -22,7 +21,12 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
+/**
+ * Service providing high-level Shopware Admin API operations.
+ * <p>
+ * This service is automatically configured by {@link de.codebarista.shopware.appserver.config.AppServerServiceAutoConfiguration}.
+ * Users can override it by defining their own {@code AdminApiService} bean.
+ */
 public class AdminApiService implements AdminApi {
     public static final String BEARER_PREFIX = "Bearer ";
     private final RestTemplate restTemplate;
