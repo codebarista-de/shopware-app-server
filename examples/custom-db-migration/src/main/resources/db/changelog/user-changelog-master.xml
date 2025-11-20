@@ -4,7 +4,15 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
+    <!-- Required: Include App Server migrations first -->
     <include file="db/changelog/app-server-changelog-master.xml"/>
+
+    <!-- Your custom migrations -->
     <include file="changesets/0001-add-my-table.xml" relativeToChangelogFile="true"/>
+
+    <!-- Uncomment to enable the event log table with foreign key to SHOPWARE_SHOP -->
+    <!--
+    <include file="changesets/0002-add-event-log.xml" relativeToChangelogFile="true"/>
+    -->
 
 </databaseChangeLog>

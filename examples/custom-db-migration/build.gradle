@@ -12,6 +12,17 @@ repositories {
     mavenCentral()
 }
 
+java {
+    sourceCompatibility = '17'
+}
+
 dependencies {
     implementation 'de.codebarista:shopware-app-server:0.0.1'
+
+    // Test dependencies
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+test {
+    useJUnitPlatform()
 }

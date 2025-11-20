@@ -8,6 +8,9 @@ This example demonstrates how to add custom database tables to your Shopware app
 - ✅ **Liquibase Integration** - Manage schema changes with user-defined migrations
 - ✅ **Migration Management** - Include required App Server migrations in your changelog
 - ✅ **Database Persistence** - Custom tables coexist with App Server's SHOPWARE_SHOP table
+- ✅ **Foreign Key Relationships** - Second migration (optional) demonstrates FK to SHOPWARE_SHOP
+- ✅ **JPA Entities & Repositories** - Complete Spring Data JPA integration
+- ✅ **Automated Tests** - Unit tests for repository methods
 
 ## Project Structure
 
@@ -15,13 +18,23 @@ This example demonstrates how to add custom database tables to your Shopware app
 custom-db-migration/
 ├── src/main/java/com/appbackend/
 │   ├── AppBackendApplication.java         # Spring Boot main class
-│   └── MyShopwareBackend.java             # Minimal ShopwareApp implementation
+│   ├── MyShopwareBackend.java             # ShopwareApp implementation
+│   ├── entity/
+│   │   ├── SystemMessage.java           # JPA entity for system message
+│   │   └── EventLog.java                  # JPA entity for event log (optional)
+│   └── repository/
+│       ├── SystemMessageRepository.java # Spring Data repository
+│       └── EventLogRepository.java        # Repository for events (optional)
 ├── src/main/resources/
 │   ├── application.yaml                   # Configuration with user-migrations enabled
 │   └── db/changelog/
 │       ├── user-changelog-master.xml      # Master changelog
 │       └── changesets/
-│           └── 0001-add-my-table.xml      # Custom table creation
+│           ├── 0001-add-my-table.xml      # Maintenance info table
+│           └── 0002-add-event-log.xml     # Event log with FK (commented out)
+├── src/test/java/com/appbackend/
+│   └── repository/
+│       └── SystemMessageRepositoryTest.java  # Repository tests
 └── build.gradle                           # Dependencies
 ```
 
@@ -51,16 +64,24 @@ cd ../..  # Go to library root
 ./gradlew publishToMavenLocal
 ```
 
-### 2. Run the App Server
+### 2. Build and Test
 
 ```bash
 cd examples/custom-db-migration
+../../gradlew build
+```
+
+This will compile the code and run the included tests.
+
+### 3. Run the App Server
+
+```bash
 ../../gradlew bootRun
 ```
 
 The server will start on `http://localhost:8080` and automatically run migrations.
 
-### 3. Verify Database Tables
+### 4. Verify Database Tables
 
 The app creates a SQLite database with both App Server and custom tables:
 
@@ -74,13 +95,13 @@ You should see:
 - **DATABASECHANGELOG** - Liquibase migration tracking
 - **DATABASECHANGELOGLOCK** - Liquibase lock management
 - **SHOPWARE_SHOP** - App Server's shop registration table
-- **MY_CUSTOM_TABLE** - Your custom table
+- **SYSTEM_MESSAGE** - Your custom table
 
 Inspect your custom table:
 
 ```sql
-.schema MY_CUSTOM_TABLE
-SELECT * FROM MY_CUSTOM_TABLE;
+.schema SYSTEM_MESSAGE
+SELECT * FROM SYSTEM_MESSAGE;
 ```
 
 ## Configuration
@@ -167,13 +188,19 @@ spring:
                    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
-    <changeSet author="Shopware Dev" id="add my table">
-        <createTable tableName="MY_CUSTOM_TABLE">
-            <column name="ID" type="int">
-                <constraints primaryKey="true" primaryKeyName="PK_ID"/>
+    <changeSet author="Shopware Dev" id="create-maintenance-info-table">
+        <createTable tableName="SYSTEM_MESSAGE">
+            <column name="ID" type="INTEGER" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="PK_SYSTEM_MESSAGE"/>
             </column>
-            <column name="MY_CUSTOM_COLUMN" type="text">
-                <constraints/>
+            <column name="MESSAGE" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATOR" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ACTIVE" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
@@ -189,7 +216,7 @@ spring:
 3. **Spring Boot** creates SpringLiquibase bean from `spring.liquibase.change-log` configuration
 4. **Liquibase runs** the master changelog:
    - First: App Server migrations (creates `SHOPWARE_SHOP` table)
-   - Then: Your custom migrations (creates `MY_CUSTOM_TABLE`)
+   - Then: Your custom migrations (creates `SYSTEM_MESSAGE` table)
 5. **Application ready** with all tables available
 
 ### App Server Migrations Context
@@ -208,6 +235,98 @@ Example with context in your changeset:
 </changeSet>
 ```
 
+## Second Migration: Event Log with Foreign Key
+
+This example includes a second migration (commented out by default) that demonstrates:
+- Creating a table with a foreign key to `SHOPWARE_SHOP`
+- Adding indexes for query optimization
+- CASCADE delete behavior
+
+### Enabling the Event Log Migration
+
+To enable the event log table, uncomment it in the master changelog:
+
+**File**: `src/main/resources/db/changelog/user-changelog-master.xml`
+
+```xml
+<!-- Uncomment to enable the event log table with foreign key to SHOPWARE_SHOP -->
+<!--
+<include file="changesets/0002-add-event-log.xml" relativeToChangelogFile="true"/>
+-->
+```
+
+Change to:
+
+```xml
+<!-- Event log table with foreign key to SHOPWARE_SHOP -->
+<include file="changesets/0002-add-event-log.xml" relativeToChangelogFile="true"/>
+```
+
+### Event Log Table Structure
+
+**File**: `src/main/resources/db/changelog/changesets/0002-add-event-log.xml`
+
+The migration creates:
+
+```sql
+CREATE TABLE EVENT_LOG (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    SHOP_ID BIGINT NOT NULL,
+    EVENT_NAME VARCHAR(255) NOT NULL,
+    RECEIVED_AT TIMESTAMP NOT NULL,
+    FOREIGN KEY (SHOP_ID) REFERENCES SHOPWARE_SHOP(ID) ON DELETE CASCADE
+);
+CREATE INDEX IDX_EVENT_LOG_SHOP_EVENT ON EVENT_LOG(SHOP_ID, EVENT_NAME, RECEIVED_AT);
+```
+
+### Using the Event Log
+
+After uncommenting the migration:
+
+1. **Restart the app** to run the migration
+2. **Use the repository** in your code:
+
+```java
+@Component
+public class MyShopwareBackend implements ShopwareApp {
+
+    private final EventLogRepository eventLogRepository;
+
+    @Override
+    public void onEvent(ShopwareEventDto event, long internalShopId,
+                        @Nullable Locale userLocale, String shopwareLanguageId) {
+        // Log the event
+        EventLog log = new EventLog(
+                internalShopId,
+                event.data().event(),
+                LocalDateTime.now()
+        );
+        eventLogRepository.save(log);
+
+        // Query events for this shop
+        List<EventLog> recentEvents = eventLogRepository
+                .findByShopIdOrderByReceivedAtDesc(internalShopId);
+    }
+}
+```
+
+3. **Query the data**:
+
+```bash
+sqlite3 shopware_app.db
+SELECT * FROM EVENT_LOG;
+SELECT el.*, ss.SHOP_URL
+FROM EVENT_LOG el
+JOIN SHOPWARE_SHOP ss ON el.SHOP_ID = ss.ID;
+```
+
+### Why the Foreign Key?
+
+The foreign key ensures:
+- **Referential integrity** - Cannot log events for non-existent shops
+- **Cascade deletion** - When a shop is deleted, its events are automatically removed
+- **Query performance** - The index speeds up queries filtering by shop
+
 ## Adding More Custom Tables
 
 ### Create a New Changeset
@@ -215,43 +334,10 @@ Example with context in your changeset:
 1. Create a new changeset file:
 
 ```bash
-touch src/main/resources/db/changelog/changesets/0002-add-another-table.xml
+touch src/main/resources/db/changelog/changesets/0003-add-another-table.xml
 ```
 
-2. Add your table definition:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
-    <changeSet author="Your Name" id="add product sync state table">
-        <createTable tableName="PRODUCT_SYNC_STATE">
-            <column name="ID" type="BIGINT" autoIncrement="true">
-                <constraints primaryKey="true" primaryKeyName="PK_PRODUCT_SYNC_STATE"/>
-            </column>
-            <column name="SHOP_ID" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="PRODUCT_ID" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="LAST_SYNC_AT" type="TIMESTAMP">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-
-        <!-- Add foreign key to SHOPWARE_SHOP -->
-        <addForeignKeyConstraint
-            baseTableName="PRODUCT_SYNC_STATE"
-            baseColumnNames="SHOP_ID"
-            constraintName="FK_PRODUCT_SYNC_SHOP"
-            referencedTableName="SHOPWARE_SHOP"
-            referencedColumnNames="ID"/>
-    </changeSet>
-</databaseChangeLog>
-```
+2. Add your table definition (see `0002-add-event-log.xml` as an example)
 
 3. Include it in your master changelog:
 
@@ -259,29 +345,20 @@ touch src/main/resources/db/changelog/changesets/0002-add-another-table.xml
 <databaseChangeLog ...>
     <include file="db/changelog/app-server-changelog-master.xml"/>
     <include file="changesets/0001-add-my-table.xml" relativeToChangelogFile="true"/>
-    <include file="changesets/0002-add-another-table.xml" relativeToChangelogFile="true"/>
+    <include file="changesets/0002-add-event-log.xml" relativeToChangelogFile="true"/>
+    <include file="changesets/0003-add-another-table.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
 ```
 
-### Foreign Key to SHOPWARE_SHOP
-
-Reference the App Server's `SHOPWARE_SHOP` table in your custom tables:
-
-```xml
-<addForeignKeyConstraint
-    baseTableName="YOUR_TABLE"
-    baseColumnNames="SHOP_ID"
-    constraintName="FK_YOUR_TABLE_SHOP"
-    referencedTableName="SHOPWARE_SHOP"
-    referencedColumnNames="ID"
-    onDelete="CASCADE"/>
-```
-
-This ensures data integrity when shops are unregistered.
+**Tip:** For tables that reference `SHOPWARE_SHOP`, see the Event Log migration (0002) as a complete working example including foreign keys, indexes, and cascade deletion.
 
 ## JPA Entity Example
 
-Create JPA entities for your custom tables:
+This example includes a complete JPA entity implementation for the `SYSTEM_MESSAGE` table.
+
+### Entity Class
+
+`src/main/java/com/appbackend/entity/SystemMessage.java`:
 
 ```java
 package com.appbackend.entity;
@@ -289,54 +366,152 @@ package com.appbackend.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "MY_CUSTOM_TABLE")
-public class MyCustomEntity {
+@Table(name = "SYSTEM_MESSAGE")
+public class SystemMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID")
-    private Integer id;
+    private Long id;
 
-    @Column(name = "MY_CUSTOM_COLUMN")
-    private String myCustomColumn;
+    @Column(name = "MESSAGE", nullable = false, columnDefinition = "TEXT")
+    private String message;
 
-    // Constructors, getters, setters
+    @Column(name = "CREATOR", nullable = false, length = 255)
+    private String creator;
+
+    @Column(name = "ACTIVE", nullable = false)
+    private Boolean active = false;
+
+    // Constructors
+    public SystemMessage() {
+    }
+
+    public SystemMessage(String message, String creator, Boolean active) {
+        this.message = message;
+        this.creator = creator;
+        this.active = active;
+    }
+
+    // Getters and setters...
 }
 ```
 
-Create a Spring Data repository:
+### Repository Interface
+
+`src/main/java/com/appbackend/repository/SystemMessageRepository.java`:
 
 ```java
 package com.appbackend.repository;
 
-import com.appbackend.entity.MyCustomEntity;
+import com.appbackend.entity.SystemMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
-public interface MyCustomEntityRepository extends JpaRepository<MyCustomEntity, Integer> {
+public interface SystemMessageRepository extends JpaRepository<SystemMessage, Long> {
+
+    /**
+     * Find the currently active maintenance message, if any.
+     */
+    Optional<SystemMessage> findFirstByActiveTrue();
 }
 ```
 
-Use it in your app:
+### Using the Repository
+
+In `MyShopwareBackend.java`, the repository is used to save system message when a shop registers:
 
 ```java
 @Component
 public class MyShopwareBackend implements ShopwareApp {
 
     @Autowired
-    private MyCustomEntityRepository repository;
+    private SystemMessageRepository maintenanceInfoRepository;
 
     @Override
-    public void onEvent(ShopwareEventDto event, long internalShopId,
-                        @Nullable Locale userLocale, String shopwareLanguageId) {
-        // Save custom data
-        MyCustomEntity entity = new MyCustomEntity();
-        entity.setMyCustomColumn("Data from event: " + event.data().event());
-        repository.save(entity);
+    public void onRegisterShop(@Nonnull String shopHost, @Nonnull String shopId,
+                               long internalShopId) {
+        log.info("Shop registered: {} (ID: {})", shopHost, shopId);
+
+        // Create a system message entry
+        SystemMessage info = new SystemMessage(
+                "System is operational. Shop " + shopHost + " successfully registered.",
+                "System",
+                false
+        );
+        maintenanceInfoRepository.save(info);
+        log.info("Saved system message: {}", info);
     }
 }
 ```
+
+### Testing the Repository
+
+After running the app and registering a shop, check the database:
+
+```bash
+sqlite3 shopware_app.db
+SELECT * FROM SYSTEM_MESSAGE;
+```
+
+You should see entries created when shops register.
+
+## Automated Tests
+
+The example includes a test class demonstrating how to test JPA repositories.
+
+### Test Class
+
+`src/test/java/com/appbackend/repository/SystemMessageRepositoryTest.java`:
+
+This test class demonstrates:
+
+1. **Save and retrieve** - Testing basic CRUD operations
+2. **Custom queries** - Testing the `findFirstByActiveTrue()` method
+3. **Empty results** - Testing query behavior when no data matches
+
+Key annotations used:
+
+```java
+@DataJpaTest  // Configures JPA test slice
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)  // Use existing SQLite config
+class SystemMessageRepositoryTest {
+    // Tests...
+}
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+./gradlew test
+
+# Run specific test class
+./gradlew test --tests SystemMessageRepositoryTest
+
+# Run with detailed output
+./gradlew test --info
+```
+
+### Test Results
+
+After running tests, view the report:
+
+```bash
+# Open in browser (Linux)
+xdg-open build/reports/tests/test/index.html
+
+# Or check the command line output
+./gradlew test
+```
+
+All 3 tests should pass:
+- ✅ `shouldSaveAndRetrieveSystemMessage()`
+- ✅ `shouldFindActiveSystemMessage()`
+- ✅ `shouldReturnEmptyWhenNoActiveSystemMessage()`
 
 ## Production Considerations
 
