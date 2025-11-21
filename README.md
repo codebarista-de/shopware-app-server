@@ -37,8 +37,14 @@ For detailed configuration instructions and implementation guidance, continue re
 
 ## Quick Start
 
-A comprehensive Getting Started Guide with step-by-step examples is coming soon.
-In the meantime, see the implementation example in the "Start implementing your App Backend" section below.
+See the [basic-app example](examples/basic-app/) for a complete, working Shopware app demonstrating:
+
+- App registration and configuration
+- Webhook event handling
+- Action button integration
+- Admin API usage
+
+For detailed implementation guidance, continue reading below.
 
 ## The App Server
 
@@ -92,6 +98,7 @@ public class MyShopwareApp implements ShopwareApp {
 
     @Override
     public String getAppName() {
+        // Must match the technical name of the App as in the <name> tag of your manifest.xml
         return "MyAppTechnicalName";
     }
     
@@ -566,8 +573,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Support
 
 For issues, questions, or feature requests, please open an issue on the project repository.
-
-TODO
 
 # OTHER THINGS TO DESCRIBE:
 
