@@ -32,16 +32,7 @@ basic-app/
 
 ## Quick Start
 
-### 1. Publish the Library Locally
-
-First, publish the Shopware App Server library to your local Maven repository:
-
-```bash
-cd ../..  # Go to library root
-./gradlew publishToMavenLocal
-```
-
-### 2. Run the App Server
+### 1. Run the App Server
 
 ```bash
 cd examples/basic-app
@@ -50,27 +41,13 @@ cd examples/basic-app
 
 The server will start on `http://localhost:8080`.
 
-### 3. Install the App in Shopware
-
-#### Configure Hosts
-
-For local testing, add this to your `/etc/hosts`:
-
-```
-127.0.0.1  my-app.localhost
-```
+### 2. Install the App in Shopware
 
 #### Install the App
 
-1. Copy `manifest.xml` to a directory named `MyShopwareApp` (e.g., `custom/apps/MyShopwareApp/manifest.xml`)
+1. Copy `manifest.xml` to a directory named `MyShopwareApp`
 2. Zip the `MyShopwareApp` directory
 3. Upload via Shopware Administration → Extensions → My Extensions → Upload Extension
-4. Or use the Shopware CLI:
-
-```bash
-# In your Shopware project directory
-bin/console app:install --activate MyShopwareApp
-```
 
 The app will automatically:
 
@@ -117,7 +94,7 @@ Update `manifest.xml` URLs:
 
 The main implementation showing:
 
-**Configuration:**
+**Important configuration:**
 
 ```java
 
@@ -134,37 +111,11 @@ public String getAppSecret() {
 
 **Webhook Handling:**
 
-```java
-@Override
-public void onEvent(ShopwareEventDto event, long internalShopId,
-                    @Nullable Locale userLocale, String shopwareLanguageId) {
-    String eventName = event.data().event();
-    String shopId = event.source().shopId();
-
-    switch (eventName) {
-        case "order.written" -> handleOrderWritten(event, shopId);
-        case "product.written" -> handleProductWritten(event, shopId);
-        default -> log.warn("Unhandled event: {}", eventName);
-    }
-}
-```
+See the `onEvent` method.
 
 **Action Button Handling:**
 
-```java
-@Override
-public ActionResponseDto<?> onAction(ActionRequestDto action, long internalShopId,
-                                     @Nullable Locale userLocale, String shopwareLanguageId) {
-    String actionName = action.data().action();
-    String shopId = action.source().shopId();
-
-    return switch (actionName) {
-        case "process_order" -> processOrder(action, shopId);
-        case "sync_product" -> syncProduct(action, shopId);
-        default -> ActionResponseDto.errorNotification("Unknown action: " + actionName);
-    };
-}
-```
+See the `onAction` method.
 
 **Admin API Usage:**
 
@@ -197,7 +148,7 @@ Order written: {...}
 ### Test Action Buttons
 
 1. Go to Orders → Select an order → Detail view
-2. Click "Process Order" button (appears in the action menu)
+2. Click "Process Order" button (appears in the action menu "...")
 3. Check for the success notification in Shopware Administration
 4. Check the app server logs for the action handling output
 
@@ -234,16 +185,6 @@ SELECT * FROM SHOPWARE_SHOP;
 - Ensure app is installed and activated
 - Check entity and view match in `manifest.xml`
 - Clear Shopware cache: `bin/console cache:clear`
-
-## Next Steps
-
-Extend this example:
-
-1. **Add more webhooks** - Monitor customer events, product stock changes, etc.
-2. **Use Admin API** - Create/update entities in Shopware
-3. **Add custom endpoints** - Build admin extensions with custom UI
-4. **External integrations** - Connect to third-party services
-5. **Background jobs** - Schedule tasks with Spring `@Scheduled`
 
 ## Resources
 
