@@ -49,7 +49,6 @@ Use custom database migrations when you need to:
 
 - Java 17 or later
 - Gradle 8+
-- Published `shopware-app-server` library to Maven Local
 
 ## Quick Start
 

@@ -28,7 +28,6 @@ basic-app/
 - Java 17 or later
 - Gradle 8+
 - Local Shopware 6 installation (for testing)
-- Published `shopware-app-server` library to Maven Local
 
 ## Quick Start
 
@@ -121,9 +120,13 @@ See the `onAction` method.
 
 ```java
 // Send notifications
-adminApi.pushSuccessMessage(this, shopId, "Order processed successfully!");
-adminApi.pushErrorMessage(this, shopId, "Failed to process order: " + e.getMessage());
-adminApi.pushInfoMessage(this, shopId, "Product sync completed for " + productIds.size() + " products");
+adminApi.pushSuccessMessage(this,shopId, "Order processed successfully!");
+adminApi.
+
+pushErrorMessage(this,shopId, "Failed to process order: "+e.getMessage());
+        adminApi.
+
+pushInfoMessage(this,shopId, "Product sync completed for "+productIds.size() +" products");
 
 // Search entities (example - commented out in code)
 // var searchQuery = new SearchQuery();
