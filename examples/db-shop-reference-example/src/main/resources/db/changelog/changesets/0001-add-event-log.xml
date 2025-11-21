@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    <changeSet author="Shopware Dev" id="create-event-log-table">
+        <!-- Use raw SQL for SQLite to create table with foreign key inline -->
+        <sql>
+            CREATE TABLE EVENT_LOG (
+                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                SHOP_ID BIGINT NOT NULL,
+                EVENT_NAME VARCHAR(255) NOT NULL,
+                RECEIVED_AT TIMESTAMP NOT NULL,
+                FOREIGN KEY (SHOP_ID) REFERENCES SHOPWARE_SHOP(ID) ON DELETE CASCADE
+            );
+        </sql>
+
+        <!-- Add index for common queries -->
+        <createIndex indexName="IDX_EVENT_LOG_SHOP_EVENT" tableName="EVENT_LOG">
+            <column name="SHOP_ID"/>
+            <column name="EVENT_NAME"/>
+            <column name="RECEIVED_AT"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
