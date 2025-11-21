@@ -35,7 +35,8 @@ public interface ShopwareApp {
     String getAppSecret();
 
     /**
-     * The technical name of the Shopware app
+     * The technical name of the Shopware app.
+     * Must match the value of the {@code <name>} tag of the manifest.xml
      *
      * @return the app name
      */
