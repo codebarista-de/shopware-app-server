@@ -143,7 +143,6 @@ public class ShopManagementService {
         if (shop == null) {
             return;
         }
-        // TODO: add cleanup job for shops marked as deleted
         shop.markAsDeleted();
         shopwareShopEntityRepository.save(shop);
 

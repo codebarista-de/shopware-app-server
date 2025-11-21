@@ -17,7 +17,6 @@
                              uniqueConstraintName="unique_shop_and_app"
                              unique="true"/>
             </column>
-            <!--TODO: Index auf SHOP_ID, DATE_CREATED, DELETED, ACTIVE (LIFECYCLE), LAST_USED USW...-->
             <column name="SHOP_HOST" type="text">
                 <constraints nullable="false"/>
             </column>
