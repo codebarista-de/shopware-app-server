@@ -1,5 +1,7 @@
 # Shopware App Server
 
+[![Tests](https://github.com/codebarista-de/shopware-app-server/actions/workflows/test.yaml/badge.svg)](https://github.com/codebarista-de/shopware-app-server/actions/workflows/test.yaml)
+
 A Java Spring Boot library for building Shopware 6 App backends.
 
 ## What is This?
