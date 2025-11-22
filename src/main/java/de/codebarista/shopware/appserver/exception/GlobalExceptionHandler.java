@@ -2,15 +2,12 @@ package de.codebarista.shopware.appserver.exception;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -35,9 +32,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    @RequestMapping(produces = MediaType.TEXT_HTML_VALUE)
     ResponseEntity<Resource> handleException(final AccessDeniedException e) {
-        Resource resource = new ClassPathResource("error.html");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(resource);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }
