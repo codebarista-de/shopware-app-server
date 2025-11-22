@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    <changeSet author="Codebarista" id="set up database" context="app-server-core">
+        <createTable tableName="SHOPWARE_SHOP">
+            <column name="ID" type="int">
+                <constraints primaryKey="true" primaryKeyName="PK_SHOPWARE_SHOP_ID"/>
+            </column>
+            <column name="APP_KEY" type="text">
+                <constraints nullable="false"
+                             uniqueConstraintName="unique_shop_and_app"
+                             unique="true"/>
+            </column>
+            <column name="SHOP_ID" type="text">
+                <constraints nullable="false"
+                             uniqueConstraintName="unique_shop_and_app"
+                             unique="true"/>
+            </column>
+            <column name="SHOP_HOST" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="SHOP_REQUEST_URL" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="SHOP_SECRET" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="REGISTRATION_REQUESTED_AT" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CONFIRMED" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="SHOP_ADMIN_API_KEY" type="text">
+                <constraints/>
+            </column>
+            <column name="SHOP_ADMIN_SECRET_KEY" type="text">
+                <constraints/>
+            </column>
+            <column name="REGISTRATION_CONFIRMED_AT" type="date">
+                <constraints/>
+            </column>
+            <column name="SHOPWARE_VERSION" type="text">
+                <constraints/>
+            </column>
+            <column name="SHOPWARE_VERSION_LAST_UPDATED_AT" type="date">
+                <constraints/>
+            </column>
+            <column name="APP_VERSION" type="text">
+                <constraints/>
+            </column>
+            <column name="APP_VERSION_LAST_UPDATED_AT" type="date">
+                <constraints/>
+            </column>
+            <column name="LAST_USED_AT" type="date">
+                <constraints/>
+            </column>
+            <column name="DELETED_AT" type="date">
+                <constraints/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

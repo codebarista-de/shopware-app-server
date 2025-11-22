@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    <changeSet author="Shopware Dev" id="create-system-message-table">
+        <createTable tableName="SYSTEM_MESSAGE">
+            <column name="ID" type="INTEGER" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="PK_SYSTEM_MESSAGE"/>
+            </column>
+            <column name="MESSAGE" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATOR" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ACTIVE" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
