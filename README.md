@@ -86,7 +86,7 @@ requests to your code.
 
 ```groovy
 dependencies {
-    implementation 'de.codebarista:shopware-app-server:0.0.1'
+    implementation 'de.codebarista:shopware-app-server:1.0.0'
 }
 ```
 
@@ -97,7 +97,7 @@ dependencies {
 <dependency>
     <groupId>de.codebarista</groupId>
     <artifactId>shopware-app-server</artifactId>
-    <version>0.0.1</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
@@ -487,7 +487,7 @@ of your `ShopwareApp`.
 Place your HTML files in `src/main/resources/public/shopware/admin/{admin-extension-folder}/{version}/index.html`.
 
 The admin extension folder can contain multiple versions of the UI.
-Each version folders must contain the respective index.html and required content.
+Each version folder must contain the respective index.html and required content.
 The version defined in the manifest will be served.
 
 The App Server can inject these attributes into the HTML before serving:
@@ -555,7 +555,7 @@ HTML.
 When Shopware loads your Admin Extension, it requests `/shopware/admin/{folder}/{version}/index.html` from your backend.
 Before serving the file, the App Server can inject authentication tokens into your HTML.
 
-The token is valid for one hour for the App, that requested it.
+The token is valid for one hour for the app that requested it.
 
 **Step 1: Add placeholder attributes to your HTML**
 
@@ -699,4 +699,4 @@ Contributions welcome! Please submit a Pull Request.
 ## Support
 
 For issues, questions, or feature requests,
-please [open an issue](https://github.com/codebarista/shopware-app-server/issues).
+please [open an issue](https://github.com/codebarista-de/shopware-app-server/issues).
