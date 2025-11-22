@@ -5,11 +5,15 @@ import de.codebarista.shopware.appserver.TokenService;
 import de.codebarista.shopware.appserver.exception.InvalidTokenException;
 import de.codebarista.shopware.appserver.model.ShopwareShopEntity;
 import jakarta.annotation.Nonnull;
-import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-@Component("tokenService")
+/**
+ * Default implementation of TokenService for generating and validating app tokens.
+ * <p>
+ * This service is automatically configured by {@link de.codebarista.shopware.appserver.config.AppServerServiceAutoConfiguration}.
+ * Users can override it by defining their own {@code TokenService} bean.
+ */
 public class TokenServiceImpl implements TokenService {
     private static final int TOKEN_TIME_LENGTH = 20;
     private static final int TOKEN_HASH_LENGTH = 64;
@@ -74,12 +78,7 @@ public class TokenServiceImpl implements TokenService {
         return !isTokenExpired(token);
     }
 
-    /**
-     * Checks if the given token has expired based on its embedded timestamp.
-     *
-     * @param token the token to check for expiration
-     * @return true if the token has expired, false otherwise
-     */
+    @Override
     public boolean isTokenExpired(@Nonnull String token) {
         if (token.length() < TOKEN_TIME_LENGTH) {
             return true; // Invalid token format, consider expired

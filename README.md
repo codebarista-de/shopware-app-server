@@ -1,318 +1,723 @@
 # Shopware App Server
 
-A Java Spring Boot library for building a Shopware 6 app backend server.
+[![Tests](https://github.com/codebarista-de/shopware-app-server/actions/workflows/test.yaml/badge.svg)](https://github.com/codebarista-de/shopware-app-server/actions/workflows/test.yaml)
 
-Unlike a Shopware Plugin, a [Shopware App][1] cannot directly extend or modify the core functionality of a Shopware shop using PHP code.
-If the desired features cannot be fully realized with [App Scripts][2] or [Storefront templates and JavaScript][3], the app must rely on the shop’s REST APIs and webhooks to implement its features.
-Such a Shopware App is therefore essentially a server application, the app backend.
+A Java Spring Boot library for building Shopware 6 App backends.
+
+## What is This?
+
+[Shopware Apps][1] are extensions that run externally from a Shopware shop. Unlike [Plugins][2] (which are PHP code
+running inside Shopware), Apps communicate with Shopware through HTTP endpoints.
+
+**When does an App need a backend?**
+
+Many Apps can work with just a `manifest.xml` file using [App Scripts][3] or [Storefront customizations][4]. However,
+you need your own backend service when your App must:
+
+- React to Shopware events (orders created, products updated, etc.)
+- Process action button clicks in the Administration
+- Call external APIs or run complex business logic
+- Store custom data beyond what Shopware provides
+
+**This library handles all the boilerplate: registration handshakes, signature verification, token management, and API
+clients—so you can focus on your business logic.**
 
 [1]: https://developer.shopware.com/docs/concepts/extensions/apps-concept.html
-[2]: https://developer.shopware.com/docs/guides/plugins/apps/app-scripts/
-[3]: https://developer.shopware.com/docs/guides/plugins/apps/storefront/
 
-This library provides the core components needed to build a shopware app backend:
+[2]: https://developer.shopware.com/docs/concepts/extensions/plugins-concept.html
 
-- 🔄 **App Registration & Lifecycle** - Registration, confirmation, and app lifecycle event handling
-- 🔐 **Authentication & Security** - Shop request [signature verification and response signing][4]
-- 🌐 **API Client** - Pre-configured client for the Shopware Admin API
-- 📊 **Event Handling** - Webhook processing and event dispatching
+[3]: https://developer.shopware.com/docs/guides/plugins/apps/app-scripts/
 
-[4]: https://developer.shopware.com/docs/guides/plugins/apps/app-signature-verification.html
+[4]: https://developer.shopware.com/docs/guides/plugins/apps/storefront/
 
-## Getting started
+## How It Works
 
-Add the shopware app server as a dependency:
-```gradle
+A Shopware App with a backend consists of two parts:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              SHOPWARE SHOP                                  │
+│                                                                             │
+│  ┌─────────────────────┐                                                    │
+│  │   Your App          │  (installed from zipped manifest.xml)              │
+│  │   - manifest.xml    │                                                    │
+│  └─────────┬───────────┘                                                    │
+│            │                                                                │
+└────────────┼────────────────────────────────────────────────────────────────┘
+             │  HTTP calls (registration, webhooks, actions)
+             ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           YOUR APP BACKEND                                  │
+│                                                                             │
+│  ┌─────────────────────┐      ┌─────────────────────┐                       │
+│  │  App Server Library │ ───► │  Your Business Code │                       │
+│  │  (this library)     │      │  (ShopwareApp impl) │                       │
+│  └─────────────────────┘      └─────────────────────┘                       │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+1. **The Shopware App** is a ZIP file containing at least a `manifest.xml`. It defines your app's metadata, permissions,
+   webhooks, and action buttons. The manifest points to your backend's URLs.
+
+2. **The App Backend** (built with this library) receives HTTP requests from Shopware when:
+    - A shop installs your app (registration)
+    - Events occur that your app subscribed to (webhooks)
+    - Users click action buttons you defined
+
+The App Server library handles the security handshake, verifies request signatures, manages OAuth tokens, and routes
+requests to your code.
+
+## Features
+
+- **App Registration & Lifecycle** - Automatic registration, confirmation, and lifecycle event handling
+- **Authentication & Security** - [Signature verification][5] for incoming requests
+- **Admin API Client** - Pre-configured client for Shopware Admin API calls
+- **Event Handling** - Webhook processing and action button support
+
+[5]: https://developer.shopware.com/docs/guides/plugins/apps/app-signature-verification.html
+
+## Prerequisites
+
+- Java 17 or later
+- Gradle 8+ or Maven
+
+## Installation
+
+**Gradle:**
+
+```groovy
 dependencies {
-    implementation 'de.codebarista:shopware-app-server:1.5.0'
+    implementation 'de.codebarista:shopware-app-server:1.0.0'
 }
 ```
 
-Create a subclass of `ShopwareApp`:
+**Maven:**
+
+```xml
+
+<dependency>
+    <groupId>de.codebarista</groupId>
+    <artifactId>shopware-app-server</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+## Quick Start
+
+See the [basic-app example](examples/basic-app/) for a complete working application demonstrating app registration,
+webhooks, action buttons, and Admin API usage.
+
+## Architecture
+
+### Multiple Apps, One Server
+
+The App Server library can host **multiple App Backends** within a single service. Each app is identified by its **App
+Key**, which corresponds to a subdomain.
+
+### App Key and Subdomain
+
+Each app runs on its own subdomain. The subdomain (everything before the first dot) serves as the **App Key**.
+
+For example, with app key `my-app` and domain `example.com`:
+
+- Registration URL: `https://my-app.example.com/shopware/api/v1/registration/register`
+
+Your `ShopwareApp` implementation must return this app key from `getAppKey()`.
+
+## Implementing Your App Backend
+
+Create a Spring Bean implementing the `ShopwareApp` interface:
 
 ```java
-@Component
-public class MyShopwareApp extends ShopwareApp {
+
+@Component // <-- This is important!
+public class MyShopwareApp implements ShopwareApp {
 
     @Override
     public String getAppKey() {
-        return "my-app-subdomain";
+        return "my-app";  // Must match subdomain
     }
 
     @Override
     public String getAppSecret() {
-        return "my-app-secret";
+        return "my-secret";  // Matches <secret> in manifest.xml (dev only)
     }
 
     @Override
     public String getAppName() {
-        return "MyAppTechnicalName"
+        return "MyShopwareApp";  // Matches <name> in manifest.xml
+    }
+
+    @Override
+    public void onEvent(ShopwareEventDto event, long internalShopId,
+                        Locale userLocale, String shopwareLanguageId) {
+        // Handle webhook events
+    }
+
+    @Override
+    public ActionResponseDto<?> onAction(ActionRequestDto action, long internalShopId,
+                                         Locale userLocale, String shopwareLanguageId) {
+        // Handle action button clicks
+        return null;
     }
 }
 ```
 
-## Framework Endpoints
+## Endpoints
 
-The App Server automatically provides these framework endpoints:
+The App Server automatically registers these endpoints and secures them with signature verification.
 
-- `POST /shopware/app/register` - App registration
-- `POST /shopware/app/confirm` - Registration confirmation
-- `POST /shopware/app/lifecycle/{event}` - Lifecycle events
-- `POST /shopware/api/v1/webhook` - Webhook handling
-- `GET /shopware/admin/{app}/**` - Admin extension serving
+### How Signature Verification Works
+
+Every request from Shopware includes a `shopware-shop-signature` header containing an HMAC-SHA256 hash of the request
+body, signed with the shared secret (your app secret during registration, or the shop's secret after confirmation).
+
+The App Server automatically:
+
+1. Extracts the signature from the header
+2. Computes the expected signature from the request body
+3. Rejects requests where signatures don't match
+
+This ensures requests genuinely come from Shopware and haven't been tampered with. You don't need to implement this
+yourself—it's handled by the `ShopwareSignatureVerificationFilter`.
+
+### Registration
+
+| Endpoint                                     | Description                                                                                                                                                                    |
+|----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `GET /shopware/api/v1/registration/register` | Called when a shop installs your app; returns credentials for the handshake. Calls the `onRegisterShop()` or `onReRegisterShop()` method of your `ShopwareApp` implementation. |
+| `POST /shopware/api/v1/registration/confirm` | Called by Shopware to confirm the registration and exchange API credentials                                                                                                    |
+
+### Events
+
+| Endpoint                       | Description                                                                                                                                 |
+|--------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| `POST /shopware/api/v1/action` | Receives action button clicks. Handle them in the `onAction()` method of your `ShopwareApp` implementation.                                 |
+| `POST /shopware/api/v1/event`  | Receives webhook events your app subscribed to in manifest.xml. Handle them in the `onEvent()` method of your `ShopwareApp` implementation. |
+
+### Lifecycle
+
+Lifecycle events notify your backend when the app is activated, deactivated, updated, or deleted in a shop.
+These events are opt-in—Shopware only sends them if you register for them in your manifest.
+
+> **Note:** Currently, only the `deleted` event has built-in handling (marks it as deleted in the database).
+> The other events are received and **logged only!**
+> See [GitHub Issue](https://github.com/codebarista-de/shopware-app-server/issues/9).
+> 
+> **Workaround:** Lifecycle events are standard webhook events you can subscribe to. 
+> Route them to the `/shopware/api/v1/event` endpoint (see Events section above) and handle them there.
+
+You need to define the URLs listed below in your manifest to use the app-server's Lifecycle controller.
+
+| Endpoint                                      | Description                                                                                                                                                        |
+|-----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `POST /shopware/api/v1/lifecycle/activated`   | Called when the shop admin activates your app                                                                                                                      |
+| `POST /shopware/api/v1/lifecycle/deactivated` | Called when the shop admin deactivates your app                                                                                                                    |
+| `POST /shopware/api/v1/lifecycle/updated`     | Called when your app is updated to a new version                                                                                                                   |
+| `POST /shopware/api/v1/lifecycle/deleted`     | Called when your app is uninstalled from a shop. Marks it as deleted in the database. Then calls the `onDeleteShop()` method of your `ShopwareApp` implementation. |
+
+See the Shopware documentation for more details:
+
+* [App Base Guide: Lifecycle events](https://developer.shopware.com/docs/guides/plugins/apps/app-base-guide.html#app-lifecycle-events)
+* [App Lifecycle](https://developer.shopware.com/docs/guides/plugins/apps/app-sdks/javascript/02-lifecycle.html)
+
+### Admin Extension
+
+| Endpoint                                            | Description                                       |
+|-----------------------------------------------------|---------------------------------------------------|
+| `GET /shopware/admin/{folder}/{version}/index.html` | Serves your custom Administration UI as an iframe |
+
+> **Note:** Custom endpoints you add require their own security implementation.
+> See [App Backend Security](#app-backend-security).
 
 ## Configuration
 
-The App Server provides comprehensive auto-configuration that's organized by functionality areas for better maintainability and clarity.
-
-### Auto-Configuration Architecture
-
-The App Server uses a modular auto-configuration approach:
-
-- **`AppServerCoreAutoConfiguration`** - General App Server settings (SSL enforcement, localhost mapping)
-- **`AppServerHttpAutoConfiguration`** - HTTP client configuration (RestTemplate, logging, error handling)
-- **`AppServerDatabaseAutoConfiguration`** - Database defaults (SQLite in-memory fallback)
-- **`AppServerLiquibaseAutoConfiguration`** - App Server core migrations (SHOPWARE_SHOP table, etc.)
-
 ### App Server Properties
-
-All App Server configuration uses the `app-server` prefix:
 
 ```yaml
 app-server:
-  # HTTP request/response logging for debugging
-  http-request-response-logging-enabled: false  # Default: false
-
-  # Enforce SSL-only communication with Shopware
-  ssl-only: true  # Default: true
-
-  # Map localhost IP to domain name for development
-  map-localhost-ip-to-localhost-domain-name: false  # Default: false
+  ssl-only: true
+  map-localhost-ip-to-localhost-domain-name: false
+  http-request-response-logging-enabled: false
+  database:
+    user-migrations: false
 ```
 
-### Database Configuration
+| Property                                    | Default | Description                                                                                                                                                                                                               |
+|---------------------------------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ssl-only`                                  | `true`  | When enabled, rejects shop URLs that don't use HTTPS. Shopware Cloud always uses HTTPS, so this protects against misconfigured on-premise installations or man-in-the-middle attacks. Disable only for local development. |
+| `map-localhost-ip-to-localhost-domain-name` | `false` | Maps `127.0.0.1` to `localhost` in incoming requests. Required for local development because Shopware sends the IP while your app expects the hostname.                                                                   |
+| `http-request-response-logging-enabled`     | `false` | Logs full HTTP request/response bodies for outgoing Admin API calls. Useful for debugging but verbose—don't enable in production.                                                                                         |
+| `database.user-migrations`                  | `false` | Controls how Liquibase migrations run. See [Database Migrations](#database-migrations) for details.                                                                                                                       |
 
-The App Server uses **Spring Boot's standard DataSource configuration** with smart defaults for easy development.
+### Development Settings
 
-#### Development (Zero Configuration)
-
-No configuration needed - the App Server automatically provides SQLite in-memory:
+For local development, you typically need:
 
 ```yaml
-# No configuration required!
-# App Server automatically configures:
-# - SQLite in-memory database (jdbc:sqlite::memory:)
-# - Proper SQLite dialect
-# - Liquibase migrations
+app-server:
+  ssl-only: false                                  # Allow HTTP (Shopware local dev uses HTTP)
+  map-localhost-ip-to-localhost-domain-name: true  # Fix localhost/127.0.0.1 mismatch
+  http-request-response-logging-enabled: true      # See what's happening (optional)
 ```
 
-#### Production (Standard Spring Boot)
+> **Production Checklist:** Set `ssl-only: true`, `map-localhost-ip-to-localhost-domain-name: false`,
+> and consider disabling logging before deploying!
 
-Use standard Spring Boot DataSource configuration - the App Server automatically detects it:
+## Database
+
+The App Server needs a database to store registered shops.
+
+### Quick Start (Zero Configuration)
+
+Out of the box, the App Server provides an in-memory SQLite database. This is perfect for a first start but **data is lost when the application restarts**.
+
+### Configuration
+
+Configure a persistent database using standard Spring Boot properties:
 
 ```yaml
-# Standard Spring Boot DataSource configuration
 spring:
   datasource:
-    url: jdbc:sqlite:shopware_apps.db
+    url: jdbc:sqlite:shopware_apps.db    # File-based SQLite
     driver-class-name: org.sqlite.JDBC
     hikari:
-      maximum-pool-size: 1
+      maximum-pool-size: 1               # SQLite supports only one writer
       connection-timeout: 5000
       data-source-properties:
-        foreign_keys: true
-        busy_timeout: 5000
-        journal_mode: WAL
-
+        foreign_keys: true               # Enable FK constraints
+        busy_timeout: 5000               # Wait for locks instead of failing
+        journal_mode: WAL                # Better concurrency
   jpa:
     database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:
-      ddl-auto: none  # Use Liquibase
-    open-in-view: false
-
-  liquibase:
-    change-log: classpath:db/changelog/user-changelog-master.xml  # Your custom migrations
+      ddl-auto: none                     # Liquibase manages the schema
 ```
 
-**How it works:**
-- App Server provides `DataSourceProperties` defaults only when none exist
-- Spring Boot's `DataSourceAutoConfiguration` handles the rest
-- Your configuration automatically overrides App Server defaults
-- No manual switches or App Server-specific properties needed
+You can also use PostgreSQL, MySQL, or any database supported by Spring Data JPA.
 
-**Supported databases:** Any database supported by Spring Boot DataSource auto-configuration (PostgreSQL, MySQL, SQLite, H2, etc.)
+### Database Migrations
 
-#### Database Migrations
+The App Server uses [Liquibase](https://www.liquibase.org/) for schema management. Understanding how migrations work
+helps you decide whether you need custom tables.
 
-The App Server uses a **dual Liquibase setup** to separate core App Server migrations from your custom migrations:
+#### Default Behavior (`user-migrations: false`)
 
-**App Server Migrations (Automatic):**
-- Run automatically when the application starts
-- Create core tables required by the App Server (`SHOPWARE_SHOP`, etc.)
-- Use `app-server-core` context to avoid conflicts
-- Cannot be disabled (required for App Server functionality)
+When your app starts, the App Server automatically:
 
-**User Migrations (Optional):**
+1. Creates its own `SpringLiquibase` bean
+2. Runs migrations from `db/changelog/app-server-changelog-master.xml` (bundled in the library)
+3. Creates the `SHOPWARE_SHOP` table for storing shop registrations
+
+This is all you need if you're only handling webhooks and actions without storing custom data.
+
+#### Custom Tables (`user-migrations: true`)
+
+If your app needs its own database tables you take control of migrations:
+
+1. **Set the flag:**
+
+```yaml
+app-server:
+  database:
+    user-migrations: true
+```
+
+2. **The App Server now skips creating its Liquibase bean**, allowing you to define your own.
+
+3. **Create your master changelog** and include the App Server migrations first:
+
+```xml
+<!-- src/main/resources/db/changelog/my-changelog-master.xml -->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" ...>
+
+    <!-- REQUIRED: App Server tables (SHOPWARE_SHOP) must be created first -->
+    <include file="db/changelog/app-server-changelog-master.xml"/>
+
+    <!-- Your custom tables come after -->
+    <include file="changesets/0001-my-custom-table.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>
+```
+
+4. **Point Spring to your changelog:**
+
 ```yaml
 spring:
   liquibase:
-    change-log: classpath:db/changelog/user-changelog-master.xml
+    change-log: classpath:db/changelog/my-changelog-master.xml
 ```
 
-**Adding Custom Tables:**
-1. Create `src/main/resources/db/changelog/user-changelog-master.xml`
-2. Add your changesets:
-   ```xml
-   <?xml version="1.0" encoding="UTF-8"?>
-   <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                      xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+**Why include App Server migrations?** The `SHOPWARE_SHOP` table is required for the library to function. By including
+`app-server-changelog-master.xml`, you ensure it's created before your tables (important if you have foreign keys
+referencing it).
 
-       <include file="db/changelog/changesets/0001-add-my-table.xml" relativeToChangelogFile="true"/>
-   </databaseChangeLog>
-   ```
+See the [custom-db-migration](examples/custom-db-migration/)
+and [db-shop-reference-example](examples/db-shop-reference-example/) for working examples.
 
-**Benefits:**
-- App Server migrations are always applied automatically
-- No conflicts between App Server and user migrations
-- Users can safely add their own database changes
-- Both use the same DataSource and transaction
+## App Manifest Configuration
 
-### HTTP Client Configuration
+The `manifest.xml` is the heart of your Shopware App. It's a configuration file that tells Shopware:
 
-The App Server provides a pre-configured `RestTemplate` optimized for Shopware API communication:
+- What your app is called and who made it
+- Where your backend is hosted (URLs)
+- What permissions your app needs
+- Which events your app wants to receive
+- What action buttons to add to the Administration
 
-**Features:**
-- **Disabled redirects** - Prevents infinite redirect loops with Shopware APIs
-- **Buffered requests** - Disables chunked encoding (required for some endpoints)
-- **Enhanced error handling** - Treats all non-2xx responses as errors
-- **Optional logging** - Request/response logging for debugging
+You package this file into a ZIP (optionally with assets) and upload it to a Shopware shop or the Shopware Store.
 
-**Configuration:**
-```yaml
-app-backend:
-  app-server:
-    http-request-response-logging-enabled: true  # Enable detailed HTTP logging
+### Registration
+
+The `<setup>` section tells Shopware where to register when your app is installed:
+
+```xml
+
+<manifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/trunk/src/Core/Framework/App/Manifest/Schema/manifest-1.0.xsd">
+    <meta>
+        <name>MyShopwareApp</name>  <!-- Must match getAppName() in your ShopwareApp -->
+        <label>My Shopware App</label>
+        <author>Your Company</author>
+        <version>1.0.0</version>
+        <license>MIT</license>
+    </meta>
+    <setup>
+        <registrationUrl>https://my-app.example.com/shopware/api/v1/registration/register</registrationUrl>
+        <secret>my-secret</secret>
+    </setup>
+</manifest>
 ```
 
-**Bean name:** `shopwareRestTemplate` - Inject this RestTemplate for Shopware API calls
+**About the `<secret>` tag:**
 
-**Example usage:**
+- For **local development**: Include it and return the same value from `getAppSecret()` in your code
+- For **production** (Shopware Store): Remove it—Shopware generates and manages the secret automatically
+- **Never commit real secrets** to version control
+
+### Webhooks
+
+Webhooks let your app react to events in Shopware. When something happens (order created, product updated, etc.),
+Shopware sends an HTTP POST to your backend.
+
+```xml
+
+<webhooks>
+    <webhook name="orderWritten"
+             url="https://my-app.example.com/shopware/api/v1/event"
+             event="order.written"/>
+    <webhook name="productWritten"
+             url="https://my-app.example.com/shopware/api/v1/event"
+             event="product.written"/>
+</webhooks>
+```
+
+| Attribute | Description                                                                                                                                                      |
+|-----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `name`    | Your identifier for this webhook (used in logs)                                                                                                                  |
+| `url`     | Always use the `/shopware/api/v1/event` endpoint                                                                                                                 |
+| `event`   | The Shopware event to subscribe to (see [Event Reference](https://developer.shopware.com/docs/resources/references/app-reference/webhook-events-reference.html)) |
+
+Handle events in your `ShopwareApp` implementation:
+
 ```java
-@Autowired
-private RestTemplate shopwareRestTemplate;
 
-// This RestTemplate is automatically configured for Shopware APIs
-ResponseEntity<String> response = shopwareRestTemplate.exchange(
-    shopwareApiUrl, HttpMethod.GET, requestEntity, String.class);
-```
+@Override
+public void onEvent(ShopwareEventDto event, long internalShopId,
+                    Locale userLocale, String shopwareLanguageId) {
+    String eventName = event.data().event();  // e.g., "order.written"
+    JsonNode payload = event.data().payload(); // Event-specific data
 
-### Core App Server Configuration
-
-The App Server provides several configuration options for different deployment scenarios:
-
-**SSL Enforcement:**
-```yaml
-app-backend:
-  app-server:
-    ssl-only: true  # Default: true - Reject HTTP URLs in production
-```
-
-**Development Helpers:**
-```yaml
-app-backend:
-  app-server:
-    map-localhost-ip-to-localhost-domain-name: true  # Map 127.0.0.1 to localhost
-```
-
-**Access Configuration Bean:**
-```java
-@Autowired
-private AppServerConfiguration appServerConfiguration;
-
-if (appServerConfiguration.isSslOnly()) {
-    // Enforce HTTPS URLs only
+    switch (eventName) {
+        case "order.written" -> processOrder(payload, internalShopId);
+        case "product.written" -> syncProduct(payload, internalShopId);
+    }
 }
 ```
 
-### Environment Variables
+### Action Buttons
 
-- `SHOPWARE_APP_URL` - Public URL of your app backend
-- `SHOPWARE_APP_SECRET` - App secret for signature verification
+Action buttons add custom actions to the Shopware Administration. Users click them and your backend responds.
 
-## Security
+```xml
 
-### Signature Verification
+<admin>
+    <action-button action="processOrder"
+                   url="https://my-app.example.com/shopware/api/v1/action"
+                   entity="order" view="detail">
+        <label>Process Order</label>
+        <label lang="de-DE">Bestellung verarbeiten</label>
+    </action-button>
+</admin>
+```
 
-All incoming requests from Shopware are automatically verified using HMAC-SHA256 signatures. The App Server handles:
+| Attribute | Description                                                                     |
+|-----------|---------------------------------------------------------------------------------|
+| `action`  | Your identifier for this action (received in `onAction()`)                      |
+| `url`     | Always use the `/shopware/api/v1/action` endpoint                               |
+| `entity`  | Which entity type this button appears on (`order`, `product`, `customer`, etc.) |
+| `view`    | Where the button appears: `list`, `detail`, or both                             |
 
-- App registration signature verification
-- Shop signature verification for webhooks
-- Automatic signature validation in security filters
+Handle actions in your `ShopwareApp` implementation:
 
-### Token Management
+```java
 
-OAuth tokens are automatically managed:
+@Override
+public ActionResponseDto<?> onAction(ActionRequestDto action, long internalShopId,
+                                     Locale userLocale, String shopwareLanguageId) {
+    String actionName = action.data().action();  // e.g., "processOrder"
+    List<String> ids = action.data().ids();      // Selected entity IDs
 
-- Initial token exchange during registration
-- Automatic token refresh when expired
-- Secure token storage in database
+    if ("processOrder".equals(actionName)) {
+        processOrders(ids, internalShopId);
+        return ActionResponseDto.notification(
+                NotificationResponseDto.success("Processed " + ids.size() + " orders!")
+        );
+    }
+    return null;
+}
+```
 
-## Database Schema
+**Response types** you can return:
 
-The App Server automatically creates and manages these tables via Liquibase:
+- `ActionResponseDto.notification(...)` - Show a toast notification
+- `ActionResponseDto.modal(...)` - Open a modal with custom content
+- `ActionResponseDto.reload(...)` - Reload the current page
 
-- `shop_registration` - Registered shop information
-- `access_token` - OAuth access tokens
-- Additional tables via Liquibase migrations
+Returning `null` results in HTTP 401 (Unauthorized). Use this as a fallback for unhandled actions.
 
-### Supported Databases
+### Administration UI
 
-The App Server works with any database supported by Spring Boot's DataSource auto-configuration:
+The App Server can serve custom Administration UI pages.
 
-- **SQLite** (default) - In-memory for development, file-based for simple deployments
-- **PostgreSQL** - Recommended for production environments
-- **MySQL/MariaDB** - Production ready with excellent performance
-- **H2** - Alternative in-memory database for testing
-- **SQL Server** - Enterprise environments
-- **Oracle** - Enterprise database systems
+Configure the base URL in your manifest:
 
-Simply configure using standard Spring Boot `spring.datasource.*` properties.
+```xml
 
-## Testing
+<admin>
+    <base-app-url>https://{app-key}.example.com/shopware/admin/{admin-extension-folder}/v1/index.html</base-app-url>
+</admin>
+```
 
-The App Server includes comprehensive test utilities:
+The `admin-extension-folder` in the manifest must match the return value of the `getAdminExtensionFolderName()` method
+of your `ShopwareApp`.
 
-- Mock Shopware server setup
-- Test data builders
-- Integration test base classes
+Place your HTML files in `src/main/resources/public/shopware/admin/{admin-extension-folder}/{version}/index.html`.
 
-## Architectural Rules
+The admin extension folder can contain multiple versions of the UI.
+Each version folder must contain the respective index.html and required content.
+The version defined in the manifest will be served.
 
-The App Server enforces clean architecture through:
+The App Server can inject these attributes into the HTML before serving:
 
-- **Compile-time checks** - Gradle plugin prevents importing app-specific code
-- **Module boundaries** - Physical separation from business logic
-- **Interface segregation** - Clean API contracts
+| Placeholder       | Injected Value                                                                                                  |
+|-------------------|-----------------------------------------------------------------------------------------------------------------|
+| `data-token=""`   | Authentication token (validate with `TokenService`)                                                             |
+| `data-version=""` | Value from `ShopwareApp#getVersion()`, or empty string if `null`. Intended to expose the backend version to UI. |
+
+See [App Backend Security](#app-backend-security) for how to validate tokens in your endpoints.
+
+See
+Shopware [Meteor Admin SDK](https://developer.shopware.com/docs/guides/plugins/apps/administration/meteor-admin-sdk.html)
+for more information.
+
+### Notifications
+
+Your backend can push notifications to the Shopware Administration at any time (not just in response to actions). First,
+request permission:
+
+```xml
+
+<permissions>
+    <create>notification</create>
+    <permission>notification:create</permission>
+</permissions>
+```
+
+Then use the `AdminApi` to send notifications:
+
+```java
+
+@Autowired
+private AdminApi adminApi;
+
+void notifyTest() {
+    adminApi.pushSuccessMessage(myApp, shopId, "Operation completed!");
+    adminApi.pushErrorMessage(myApp, shopId, "Something went wrong");
+}
+```
+
+## App Backend Security
+
+The App Server handles security differently depending on who is calling your endpoints.
+
+### Shopware-to-Backend Requests (Automatic)
+
+Requests from Shopware to the App Server's built-in endpoints (registration, webhooks, actions) are automatically
+secured via HMAC-SHA256 signature verification. You don't need to do anything—this is handled by
+`ShopwareSignatureVerificationFilter`.
+
+See the Shopware documentation on [Signing & Verification in the App System](https://developer.shopware.com/docs/guides/plugins/apps/app-signature-verification.html).
+
+### Browser-to-Backend Requests (Your Responsibility)
+
+If your app has an Admin Extension UI (served as an iframe in Shopware Administration), that UI runs in the user's
+browser. When it calls your custom backend endpoints, those requests come from the browser—not from Shopware—so they
+don't have Shopware's signature.
+
+For these requests, you need to implement your own authentication. The App Server helps by injecting a token into your
+HTML.
+
+### Token Injection for Admin Extensions
+
+When Shopware loads your Admin Extension, it requests `/shopware/admin/{folder}/{version}/index.html` from your backend.
+Before serving the file, the App Server can inject authentication tokens into your HTML.
+
+The token is valid for one hour for the app that requested it.
+
+**Step 1: Add placeholder attributes to your HTML**
+
+In your `index.html`, add empty `data-token` attribute:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Admin Extension</title>
+</head>
+<body data-token="">
+<div id="app"></div>
+<script src="main.js"></script>
+</body>
+</html>
+```
+
+**Step 2: The App Server injects the token**
+
+When serving this file, the App Server replaces the empty value:
+
+`data-token=""` → `data-token="01234asdf..."`
+
+**Step 3: Your JavaScript reads the token**
+
+```javascript
+const token = document.body.dataset.token;
+const version = document.body.dataset.version;
+
+// Include token in API calls to your backend
+fetch('/api/my-endpoint?shopId=' + shopId + '&token=' + token)
+```
+
+### Validating Tokens in Your Endpoints
+
+The injected token can be validated with the `TokenService`.
+
+**Option 1: Using `@PreAuthorize` (Recommended)**
+
+```java
+
+@RestController
+@RequestMapping("/api")
+public class MyApiController {
+
+    @GetMapping("/my-endpoint")
+    @PreAuthorize("@tokenService.isAppTokenValid(@myShopwareApp, #shopId, #token)")
+    public ResponseEntity<?> myEndpoint(
+            @RequestParam("shopId") String shopId,
+            @RequestParam("token") String token) {
+        // Token is valid if we get here
+        return ResponseEntity.ok("Success");
+    }
+}
+```
+
+The `@PreAuthorize` annotation:
+
+- `@tokenService` - References the `TokenService` bean
+- `@myShopwareApp` - References your `ShopwareApp` bean by name (the class name in camelCase)
+- `#shopId`, `#token` - References the method parameters
+
+For `@PreAuthorize` to work, enable method security in your application:
+
+```java
+
+@EnableMethodSecurity
+@SpringBootApplication
+public class MyApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MyApplication.class, args);
+    }
+}
+```
+
+**Option 2: Programmatic validation**
+
+```java
+
+@Autowired
+private TokenService tokenService;
+
+@Autowired
+private MyShopwareApp myShopwareApp;
+
+@GetMapping("/my-endpoint")
+public ResponseEntity<?> myEndpoint(
+        @RequestParam("shopId") String shopId,
+        @RequestParam("token") String token) {
+
+    if (!tokenService.isAppTokenValid(myShopwareApp, shopId, token)) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    // Token is valid
+    return ResponseEntity.ok("Success");
+}
+```
+
+## HTTP Client
+
+> **Note:** Avoid using the `shopwareRestTemplate` directly. Use the `AdminApi` instead.
+
+The App Server provides a pre-configured `RestTemplate`:
+
+```java
+
+@Autowired
+@Qualifier("shopwareRestTemplate")
+private RestTemplate shopwareRestTemplate;
+```
+
+Features: disabled redirects, buffered requests, enhanced error handling, optional request/response logging.
+
+## Examples
+
+| Example                                                          | Description                                               |
+|------------------------------------------------------------------|-----------------------------------------------------------|
+| [basic-app](examples/basic-app/)                                 | Complete app with webhooks, action buttons, and Admin API |
+| [custom-db-migration](examples/custom-db-migration/)             | Custom database tables with Liquibase                     |
+| [db-shop-reference-example](examples/db-shop-reference-example/) | Foreign key relationships to SHOPWARE_SHOP                |
+
+## Versioning
+
+This project follows [Semantic Versioning 2.0.0](https://semver.org/).
+
+- **MAJOR** - Breaking changes
+- **MINOR** - New features (backwards compatible)
+- **PATCH** - Bug fixes
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## License
 
-This App Server is designed to be open-sourced under MIT license.
+MIT License
 
 ## Contributing
 
-When contributing to the App Server:
-
-1. **Maintain independence** - Never import app-specific packages
-2. **Follow conventions** - Use existing patterns and naming
-3. **Add tests** - Comprehensive test coverage required
-4. **Update docs** - Keep documentation current
+Contributions welcome! Please submit a Pull Request.
 
 ## Support
 
-For questions and support:
-
-- Review the main project documentation
-- Check architectural rules in `/docs/ARCHITECTURAL_RULES.md`
-- Examine example implementations in the main module
+- [GitHub Issues](https://github.com/codebarista-de/shopware-app-server/issues) - Bug reports and feature requests
+- [GitHub Discussions](https://github.com/codebarista-de/shopware-app-server/discussions) - Questions and community help

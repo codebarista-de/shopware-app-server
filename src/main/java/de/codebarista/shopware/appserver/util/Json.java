@@ -13,6 +13,12 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Utility class for JSON serialization compatible with Shopware's date/time format.
+ * <p>
+ * This utility provides JSON serialization configured to match Shopware Admin API conventions,
+ * including the specific date-time format: {@code yyyy-MM-dd'T'HH:mm:ss.SSSxxx}
+ */
 public class Json {
     private Json() {
 
@@ -38,6 +44,15 @@ public class Json {
                 .writer();
     }
 
+    /**
+     * Converts an object to its JSON string representation.
+     * <p>
+     * Uses Jackson serialization configured for Shopware compatibility.
+     * Date/time values are formatted as {@code yyyy-MM-dd'T'HH:mm:ss.SSSxxx}.
+     *
+     * @param obj the object to serialize
+     * @return the JSON string representation, or the error message if serialization fails
+     */
     public static String toJson(Object obj) {
         try {
             return JSON_WRITER.writeValueAsString(obj);

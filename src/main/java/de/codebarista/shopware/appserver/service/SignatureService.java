@@ -6,7 +6,6 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import de.codebarista.shopware.appserver.exception.InvalidSignatureException;
 import de.codebarista.shopware.appserver.exception.SignatureInitializationException;
-import org.springframework.stereotype.Component;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -15,7 +14,12 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-@Component
+/**
+ * Service for cryptographic signature calculation and verification.
+ * <p>
+ * This service is automatically configured by {@link de.codebarista.shopware.appserver.config.AppServerServiceAutoConfiguration}.
+ * Users can override it by defining their own {@code SignatureService} bean.
+ */
 public class SignatureService {
     public record SignedResponse(String response, String signature) {
     }

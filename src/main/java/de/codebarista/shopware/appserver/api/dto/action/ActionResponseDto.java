@@ -25,30 +25,73 @@ public class ActionResponseDto<PAYLOAD> {
         this.payload = payload;
     }
 
+    /**
+     * Creates a success notification response.
+     *
+     * @param message the success message to display
+     * @return an action response that shows a success notification
+     */
     public static ActionResponseDto<ActionResponseNotificationDto> successNotification(String message) {
         return new ActionResponseDto<>("notification", new ActionResponseNotificationDto("success", message));
     }
 
+    /**
+     * Creates an error notification response.
+     *
+     * @param message the error message to display
+     * @return an action response that shows an error notification
+     */
     public static ActionResponseDto<ActionResponseNotificationDto> errorNotification(String message) {
         return new ActionResponseDto<>("notification", new ActionResponseNotificationDto("error", message));
     }
 
+    /**
+     * Creates an info notification response.
+     *
+     * @param message the info message to display
+     * @return an action response that shows an info notification
+     */
     public static ActionResponseDto<ActionResponseNotificationDto> infoNotification(String message) {
         return new ActionResponseDto<>("notification", new ActionResponseNotificationDto("info", message));
     }
 
+    /**
+     * Creates a warning notification response.
+     *
+     * @param message the warning message to display
+     * @return an action response that shows a warning notification
+     */
     public static ActionResponseDto<ActionResponseNotificationDto> warningNotification(String message) {
         return new ActionResponseDto<>("notification", new ActionResponseNotificationDto("warning", message));
     }
 
+    /**
+     * Creates a modal dialog response.
+     *
+     * @param iframeUrl the URL to load in the modal's iframe
+     * @param size      the size of the modal window
+     * @param expand    whether the modal should be expanded
+     * @return an action response that opens a modal dialog
+     */
     public static ActionResponseDto<ActionResponseModalDto> openModal(String iframeUrl, ActionResponseModalDto.ModalSize size, boolean expand) {
         return new ActionResponseDto<>("openModal", new ActionResponseModalDto(iframeUrl, size, expand));
     }
 
+    /**
+     * Creates a new tab response.
+     *
+     * @param redirectUrl the URL to open in the new tab
+     * @return an action response that opens a new browser tab
+     */
     public static ActionResponseDto<ActionResponseOpenNewTabDto> openNewTab(String redirectUrl) {
         return new ActionResponseDto<>("openNewTab", new ActionResponseOpenNewTabDto(redirectUrl));
     }
 
+    /**
+     * Creates a page reload response.
+     *
+     * @return an action response that reloads the current Administration page
+     */
     public static ActionResponseDto<Map<?, ?>> reload() {
         return new ActionResponseDto<>("reload", Collections.emptyMap());
     }

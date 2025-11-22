@@ -1,4 +1,7 @@
 de.codebarista.shopware.appserver.config.AppServerCoreAutoConfiguration
 de.codebarista.shopware.appserver.config.AppServerHttpAutoConfiguration
 de.codebarista.shopware.appserver.config.AppServerDatabaseAutoConfiguration
+de.codebarista.shopware.appserver.config.AppServerComponentAutoConfiguration
+de.codebarista.shopware.appserver.config.AppServerServiceAutoConfiguration
+de.codebarista.shopware.appserver.config.AppServerWebSecurityConfiguration
 de.codebarista.shopware.appserver.config.AppServerLiquibaseAutoConfiguration

@@ -1,0 +1,39 @@
+spring:
+  liquibase:
+    change-log: classpath:db/changelog/user-changelog-master.xml
+  datasource:
+    url: jdbc:sqlite:shopware_app.db
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 1
+      connection-timeout: 5000
+      data-source-properties:
+        # Foreign keys disabled by default to allow simpler testing
+        # Enable in production to enforce referential integrity
+        foreign_keys: false
+        busy_timeout: 5000
+        journal_mode: WAL
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: none  # Let Liquibase handle schema
+    open-in-view: false
+
+# App Server configuration
+app-server:
+  # Execute user defined Liquibase migrations
+  database:
+    user-migrations: true
+
+  # DEVELOPMENT ONLY - Set to true in production
+  ssl-only: false
+
+  # DEVELOPMENT ONLY - Allows localhost testing
+  map-localhost-ip-to-localhost-domain-name: true
+
+  # Enable HTTP request/response logging for debugging
+  http-request-response-logging-enabled: true
+
+# Server configuration
+server:
+  port: 8080

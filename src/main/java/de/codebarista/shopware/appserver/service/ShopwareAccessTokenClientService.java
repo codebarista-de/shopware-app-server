@@ -12,7 +12,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -21,7 +20,12 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Service
+/**
+ * Service for obtaining and caching Shopware Admin API access tokens.
+ * <p>
+ * This service is automatically configured by {@link de.codebarista.shopware.appserver.config.AppServerServiceAutoConfiguration}.
+ * Users can override it by defining their own {@code ShopwareAccessTokenClientService} bean.
+ */
 public class ShopwareAccessTokenClientService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ShopwareAccessTokenClientService.class);
 

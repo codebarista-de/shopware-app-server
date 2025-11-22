@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/trunk/src/Core/Framework/App/Manifest/Schema/manifest-1.0.xsd">
+
+    <meta>
+        <name>DatabaseExampleApp</name>
+        <label>Database Example App</label>
+        <label lang="de-DE">Datenbank Beispiel App</label>
+        <description>Example demonstrating foreign key relationships to SHOPWARE_SHOP table</description>
+        <description lang="de-DE">Beispiel für Fremdschlüssel-Beziehungen zur SHOPWARE_SHOP Tabelle</description>
+        <author>Your Company</author>
+        <copyright>(c) 2025 Your Company</copyright>
+        <version>1.0.0</version>
+        <license>MIT</license>
+    </meta>
+
+    <setup>
+        <!-- For localhost development: http://my-db-app.localhost:8080/... -->
+        <!-- For production: https://my-db-app.yourdomain.com/... -->
+        <registrationUrl>http://my-db-app.localhost:8080/shopware/api/v1/registration/register</registrationUrl>
+
+        <!-- DEVELOPMENT ONLY: Include secret for local testing -->
+        <!-- REMOVE THIS TAG before uploading to Shopware account -->
+        <secret>my-app-secret</secret>
+    </setup>
+
+    <permissions>
+        <read>order</read>
+        <read>product</read>
+        <read>customer</read>
+    </permissions>
+
+    <webhooks>
+        <!-- Order events - will be logged in EVENT_LOG table -->
+        <webhook name="orderWritten" url="http://my-db-app.localhost:8080/shopware/api/v1/event"
+                 event="order.written"/>
+
+        <!-- Product events - will be logged in EVENT_LOG table -->
+        <webhook name="productWritten" url="http://my-db-app.localhost:8080/shopware/api/v1/event"
+                 event="product.written"/>
+
+        <!-- Customer events - will be logged in EVENT_LOG table -->
+        <webhook name="customerWritten" url="http://my-db-app.localhost:8080/shopware/api/v1/event"
+                 event="customer.written"/>
+    </webhooks>
+
+</manifest>

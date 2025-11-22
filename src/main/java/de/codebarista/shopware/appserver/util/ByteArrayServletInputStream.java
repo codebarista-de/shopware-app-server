@@ -1,4 +1,4 @@
-package de.codebarista.shopware.appserver.config;
+package de.codebarista.shopware.appserver.util;
 
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
@@ -11,11 +11,10 @@ import java.io.IOException;
  * from a byte array. This input stream is suitable for scenarios where
  * you want to provide servlet input from an in-memory byte array.
  */
-// TODO: MOVE TO OTHER PACKAGE ???
 public class ByteArrayServletInputStream extends ServletInputStream {
     private final ByteArrayInputStream byteArrayInputStream;
 
-    ByteArrayServletInputStream(byte[] data) {
+    public ByteArrayServletInputStream(byte[] data) {
         this.byteArrayInputStream = new ByteArrayInputStream(data);
     }
 

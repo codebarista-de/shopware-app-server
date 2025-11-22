@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * The EqualsAny filter allows you to filter a field where at least one of the defined values matches exactly.
  * The following SQL statement is executed in the background:
- * WHERE productNumber IN ('3fed029475fa4d4585f3a119886e0eb1', '77d26d011d914c3aa2c197c81241a45b').
+ * WHERE productNumber IN ('1000', '1001').
  *
  * @param <T> the type of the filtered value, e.g. {@link String}, {@link Integer}, {@link Long}, {@link Double}.
  */
@@ -30,6 +30,11 @@ public class EqualsAnyFilter<T> extends Filter {
         this.values.addAll(values);
     }
 
+    /**
+     * Adds a value to the list of acceptable values.
+     *
+     * @param value the value to add
+     */
     public void addValue(T value) {
         values.add(value);
     }

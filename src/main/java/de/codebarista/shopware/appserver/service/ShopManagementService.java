@@ -10,14 +10,18 @@ import de.codebarista.shopware.appserver.model.ShopwareShopEntityRepository;
 import jakarta.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Service
+/**
+ * Service for managing shop registrations and lifecycle.
+ * <p>
+ * This service is automatically configured by {@link de.codebarista.shopware.appserver.config.AppServerServiceAutoConfiguration}.
+ * Users can override it by defining their own {@code ShopManagementService} bean.
+ */
 public class ShopManagementService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ShopManagementService.class);
 
@@ -139,7 +143,6 @@ public class ShopManagementService {
         if (shop == null) {
             return;
         }
-        // TODO: add cleanup job for shops marked as deleted
         shop.markAsDeleted();
         shopwareShopEntityRepository.save(shop);
 

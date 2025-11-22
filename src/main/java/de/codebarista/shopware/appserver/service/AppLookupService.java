@@ -4,14 +4,18 @@ import de.codebarista.shopware.appserver.ShopwareApp;
 import de.codebarista.shopware.appserver.exception.NoSuchAppException;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Service
+/**
+ * Service for looking up ShopwareApp instances by key or host.
+ * <p>
+ * This service is automatically configured by {@link de.codebarista.shopware.appserver.config.AppServerServiceAutoConfiguration}.
+ * Users can override it by defining their own {@code AppLookupService} bean.
+ */
 public class AppLookupService {
     private final Map<String, ShopwareApp> apps;
 

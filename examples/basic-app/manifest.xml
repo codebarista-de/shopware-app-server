@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/trunk/src/Core/Framework/App/Manifest/Schema/manifest-1.0.xsd">
+
+    <meta>
+        <name>MyShopwareApp</name>
+        <label>My Shopware App</label>
+        <label lang="de-DE">Meine Shopware App</label>
+        <description>Example Shopware App using the App Server library</description>
+        <description lang="de-DE">Beispiel Shopware App mit der App Server Bibliothek</description>
+        <author>Your Company</author>
+        <copyright>(c) 2025 Your Company</copyright>
+        <version>1.0.0</version>
+        <license>MIT</license>
+    </meta>
+
+    <setup>
+        <!-- For localhost development: http://my-app.localhost:8080/... -->
+        <!-- For production: https://my-app.yourdomain.com/... -->
+        <registrationUrl>http://my-app.localhost:8080/shopware/api/v1/registration/register</registrationUrl>
+
+        <!-- DEVELOPMENT ONLY: Include secret for local testing -->
+        <!-- REMOVE THIS TAG before uploading to Shopware account -->
+        <secret>my-app-secret</secret>
+    </setup>
+
+    <permissions>
+        <read>product</read>
+        <read>order</read>
+        <create>notification</create>
+        <permission>notification:create</permission>
+    </permissions>
+
+    <webhooks>
+        <!-- Order written event -->
+        <webhook name="orderWritten" url="http://my-app.localhost:8080/shopware/api/v1/event" event="order.written"/>
+
+        <!-- Product written event -->
+        <webhook name="productWritten" url="http://my-app.localhost:8080/shopware/api/v1/event"
+                 event="product.written"/>
+    </webhooks>
+
+    <admin>
+        <!-- Action button in order detail view -->
+        <action-button action="process_order" url="http://my-app.localhost:8080/shopware/api/v1/action"
+                       entity="order" view="detail">
+            <label>Process Order</label>
+            <label lang="de-DE">Bestellung verarbeiten</label>
+        </action-button>
+    </admin>
+
+</manifest>

@@ -8,6 +8,11 @@ import jakarta.annotation.Nullable;
 
 import java.util.Locale;
 
+/**
+ * Represents an App Backend for a Shopware App.
+ * <p>
+ * Implementations need to be Spring Beans.
+ */
 public interface ShopwareApp {
     /**
      * The subdomain of the app, which is used to map requests to apps and therefore called app-key.
@@ -18,21 +23,25 @@ public interface ShopwareApp {
      *
      * @return a subdomain (e.g. "upload-app")
      */
-    @Nonnull String getAppKey();
+    @Nonnull
+    String getAppKey();
 
     /**
      * The shared secret that is used by shopware to sign requests to the app backend
      *
      * @return the app secret
      */
-    @Nonnull String getAppSecret();
+    @Nonnull
+    String getAppSecret();
 
     /**
-     * The technical name of the Shopware app
+     * The technical name of the Shopware app.
+     * Must match the value of the {@code <name>} tag of the manifest.xml
      *
      * @return the app name
      */
-    @Nonnull String getAppName();
+    @Nonnull
+    String getAppName();
 
     /**
      * Version of the app backend.
@@ -41,9 +50,11 @@ public interface ShopwareApp {
      * attribute 'version' of the body element.
      * <p>
      * This returns the version of the app backend, not the app version installed in a specific shop.
+     *
      * @return the version of the app backend or null.
      */
-    @Nullable String getVersion();
+    @Nullable
+    String getVersion();
 
     /// The name of the app-folder in the shopware-admin-extension folder which contains the admin extension for this app.
     ///
@@ -83,7 +94,8 @@ public interface ShopwareApp {
     /// Both serve a different purpose.
     ///
     /// @return a sub-folder name or null if the app does not have an admin extension
-    @Nullable String getAdminExtensionFolderName();
+    @Nullable
+    String getAdminExtensionFolderName();
 
     /**
      * Invoked when a new shop is registered with the app backend.
@@ -116,7 +128,32 @@ public interface ShopwareApp {
      */
     void onDeleteShop(@Nonnull String shopHost, @Nonnull String shopId, long internalShopId);
 
+    /**
+     * Method that is invoked when an Event from a Webhook is triggered, to which the App is subscribed in the manifest.xml.
+     * <p>
+     * Define webhooks in your manifest.xml to receive notifications about Shopware events.
+     * When an event occurs in a shop, this method is called with the event details.
+     *
+     * @param event              the event data sent by Shopware containing payload, event name, and source information
+     * @param internalShopId     the ID which identifies the shop in this app-backend service instance
+     * @param userLocale         the locale of the user who triggered the event, if available
+     * @param shopwareLanguageId the Shopware language ID for the context in which the event occurred
+     */
     void onEvent(@Nonnull ShopwareEventDto event, long internalShopId, @Nullable Locale userLocale, @Nullable String shopwareLanguageId);
 
-    @Nonnull ActionResponseDto<?> onAction(@Nonnull ActionRequestDto action, long internalShopId, @Nullable Locale userLocale, @Nullable String shopwareLanguageId);
+    /**
+     * Method that is invoked when an Action, that is defined in the App's manifest.xml, is triggered.
+     * As a response a notification can be displayed in Shopware, a modal dialog or a new tab can be opened
+     * or the page can be refreshed.
+     * <p>
+     * Return {@code null} to disable Action handling. In this case Action requests will be responded with a 401 (UNAUTHORIZED).
+     *
+     * @param action             Those endpoints are called when an Action button is clicked or a Shopware event occurs, that the App registered to in the `manifest.xml`.
+     * @param internalShopId     the ID which identifies the shop in this app-backend service instance
+     * @param userLocale
+     * @param shopwareLanguageId
+     * @return a response to the Action or {@code null}, if action handling is disabled.
+     */
+    @Nullable
+    ActionResponseDto<?> onAction(@Nonnull ActionRequestDto action, long internalShopId, @Nullable Locale userLocale, @Nullable String shopwareLanguageId);
 }
