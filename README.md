@@ -4,35 +4,29 @@
 
 A Java Spring Boot library for building Shopware 6 App backends.
 
-## What is This?
+## Overview
 
-[Shopware Apps][1] are extensions that run externally from a Shopware shop. Unlike [Plugins][2] (which are PHP code
-running inside Shopware), Apps communicate with Shopware through HTTP endpoints.
+Unlike a Shopware Plugin, a [Shopware App][1] cannot directly extend or modify the core functionality
+of a Shopware shop using PHP code. If the desired features cannot be fully realized with [App Scripts][2]
+or [Storefront templates and JavaScript][3], the app must rely on the shop’s REST APIs and webhooks
+to implement its features.
 
-**When does an App need a backend?**
-
-Many Apps can work with just a `manifest.xml` file using [App Scripts][3] or [Storefront customizations][4]. However,
-you need your own backend service when your App must:
-
-- React to Shopware events (orders created, products updated, etc.)
-- Process action button clicks in the Administration
-- Call external APIs or run complex business logic
-- Store custom data beyond what Shopware provides
-
-**This library handles all the boilerplate: registration handshakes, signature verification, token management, and API
-clients—so you can focus on your business logic.**
+Such a Shopware App is therefore essentially a server application, the **App Backend**.
 
 [1]: https://developer.shopware.com/docs/concepts/extensions/apps-concept.html
+[2]: https://developer.shopware.com/docs/guides/plugins/apps/app-scripts/
+[3]: https://developer.shopware.com/docs/guides/plugins/apps/storefront/
 
-[2]: https://developer.shopware.com/docs/concepts/extensions/plugins-concept.html
+This library provides the core components needed to build a Shopware App Backend:
 
-[3]: https://developer.shopware.com/docs/guides/plugins/apps/app-scripts/
+- 🔄 **App Registration & Lifecycle** - Registration, confirmation, and app lifecycle event handling
+- 🔐 **Authentication & Security** - Shop request [signature verification and response signing][4]
+- 🌐 **API Client** - Pre-configured client for the Shopware Admin API
+- 📊 **Event Handling** - Webhook processing and event dispatching
 
-[4]: https://developer.shopware.com/docs/guides/plugins/apps/storefront/
+[4]: https://developer.shopware.com/docs/guides/plugins/apps/app-signature-verification.html
 
-## How It Works
-
-A Shopware App with a backend consists of two parts:
+**A Shopware App with a backend consists of two parts:**
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -68,21 +62,12 @@ A Shopware App with a backend consists of two parts:
 The App Server library handles the security handshake, verifies request signatures, manages OAuth tokens, and routes
 requests to your code.
 
-## Features
-
-- **App Registration & Lifecycle** - Automatic registration, confirmation, and lifecycle event handling
-- **Authentication & Security** - [Signature verification][5] for incoming requests
-- **Admin API Client** - Pre-configured client for Shopware Admin API calls
-- **Event Handling** - Webhook processing and action button support
-
-[5]: https://developer.shopware.com/docs/guides/plugins/apps/app-signature-verification.html
-
 ## Prerequisites
 
 - Java 17 or later
 - Gradle 8+ or Maven
 
-## Installation
+### Add the app-server as a dependency:
 
 **Gradle:**
 
@@ -112,7 +97,7 @@ webhooks, action buttons, and Admin API usage.
 
 ### Multiple Apps, One Server
 
-The App Server library can host **multiple App Backends** within a single service. Each app is identified by its **App
+The App Server library can host multiple App Backends within a single service. Each app is identified by its **App
 Key**, which corresponds to a subdomain.
 
 ### App Key and Subdomain
