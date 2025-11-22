@@ -206,7 +206,7 @@ These events are opt-in—Shopware only sends them if you register for them in y
 > **Workaround:** Lifecycle events are standard webhook events you can subscribe to. 
 > Route them to the `/shopware/api/v1/event` endpoint (see Events section above) and handle them there.
 
-You need to define the URLs listet below in your manifest to use the app-server's Lifecycle controller.
+You need to define the URLs listed below in your manifest to use the app-server's Lifecycle controller.
 
 | Endpoint                                      | Description                                                                                                                                                        |
 |-----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -261,7 +261,7 @@ app-server:
 ```
 
 > **Production Checklist:** Set `ssl-only: true`, `map-localhost-ip-to-localhost-domain-name: false`,
-> and consider disable logging before deploying!
+> and consider disabling logging before deploying!
 
 ## Database
 
@@ -269,9 +269,7 @@ The App Server needs a database to store registered shops.
 
 ### Quick Start (Zero Configuration)
 
-Out of the box, the App Server provides an in-memory SQLite database. This is perfect for a first start but **data is
-lost
-when the application restarts**.
+Out of the box, the App Server provides an in-memory SQLite database. This is perfect for a first start but **data is lost when the application restarts**.
 
 ### Configuration
 
@@ -475,7 +473,7 @@ public ActionResponseDto<?> onAction(ActionRequestDto action, long internalShopI
                 NotificationResponseDto.success("Processed " + ids.size() + " orders!")
         );
     }
-    return null;  // Unknown action
+    return null;
 }
 ```
 
@@ -485,7 +483,7 @@ public ActionResponseDto<?> onAction(ActionRequestDto action, long internalShopI
 - `ActionResponseDto.modal(...)` - Open a modal with custom content
 - `ActionResponseDto.reload(...)` - Reload the current page
 
-If you return `null`, the app-server will respond with an HTTP Status 401 (Unauthorized).
+Returning `null` results in HTTP 401 (Unauthorized). Use this as a fallback for unhandled actions.
 
 ### Administration UI
 
