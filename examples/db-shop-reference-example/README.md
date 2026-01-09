@@ -28,7 +28,7 @@ db-shop-reference-example/
 
 ```bash
 cd examples/db-shop-reference-example
-../../gradlew bootRun
+./gradlew bootRun
 ```
 
 The server will start on `http://localhost:8080`.
@@ -72,8 +72,8 @@ List<EventLog> findByShopIdOrderByReceivedAtDesc(Long shopId);
 
 ### Installing in Shopware
 
-* Package `manifest.xml` in a folder named `DatabaseExampleApp`, zip it
-* Install in Shopware Administration → Extensions
+* Zip the `DatabaseExampleApp` directory
+* Upload via Shopware Administration → Extensions → My Extensions → Upload Extension
 
 ### Test Event Logging
 

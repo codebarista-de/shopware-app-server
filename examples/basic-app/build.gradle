@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
     // Shopware App Server library
-    implementation 'de.codebarista:shopware-app-server:0.0.1'
+    implementation 'de.codebarista:shopware-app-server:+'
 
     // Optional: Add if you need to work with Shopware API models
     // implementation 'de.codebarista:shopware-model:X.Y.Z'

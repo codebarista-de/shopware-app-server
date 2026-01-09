@@ -5,16 +5,15 @@ import de.codebarista.shopware.appserver.service.AppLookupService;
 import de.codebarista.shopware.appserver.service.ShopManagementService;
 import de.codebarista.shopware.appserver.service.SignatureService;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
@@ -52,20 +51,17 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
  *   </li>
  * </ul>
  * <p>
- * <h2>Customization</h2>
- * <p>
- * The App Server provides default implementations for:
- * <ul>
- *   <li>
- *     {@link PasswordEncoder}: A {@link BCryptPasswordEncoder} is provided by default.
- *     Override by defining your own {@link PasswordEncoder} bean in your application context.
- *   </li>
- * </ul>
- * <p>
- * <strong>Note:</strong>
+ * <h2>Securing your own endpoints</h2>
  * This configuration <em>only</em> applies to App Server endpoints ({@code /shopware/**}).
  * Application endpoints must be secured separately in the host application.
- * See {@link de.codebarista.shopware.appserver.TokenService}
+ * When adding a {@link SecurityFilterChain} that applies to all endpoints
+ * (e.g. <code>authorizeHttpRequests(ar -> ar.anyRequest().denyAll())</code>) make sure
+ * that it's not annotated with <code>@Order(Ordered.HIGHEST_PRECEDENCE)</code>.
+ * Otherwise, it conflicts with the filter chains from this class and your application
+ * will not start.
+ * <p>
+ * To secure endpoints called from an admin extension you can use the
+ * {@link de.codebarista.shopware.appserver.TokenService}.
  */
 @AutoConfiguration(after = AppServerServiceAutoConfiguration.class)
 public class AppServerWebSecurityConfiguration {
@@ -86,12 +82,7 @@ public class AppServerWebSecurityConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(PasswordEncoder.class)
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain shopwareApiSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/shopware/api/v1/**")
@@ -108,6 +99,7 @@ public class AppServerWebSecurityConfiguration {
     }
 
     @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain adminExtensionsSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/shopware/admin/**")
