@@ -535,9 +535,9 @@ void notifyTest() {
 
 ## App Backend Security
 
-The App Server handles security differently depending on who is calling your endpoints.
+Only the endpoints called by Shopware are secured by the app server.
 
-### Shopware-to-Backend Requests (Automatic)
+### Shopware Endpoints (Automatic)
 
 Requests from Shopware to the App Server's built-in endpoints (registration, webhooks, actions) are automatically
 secured via HMAC-SHA256 signature verification. You don't need to do anything—this is handled by
@@ -545,10 +545,29 @@ secured via HMAC-SHA256 signature verification. You don't need to do anything—
 
 See the Shopware documentation on [Signing & Verification in the App System](https://developer.shopware.com/docs/guides/plugins/apps/app-signature-verification.html).
 
-### Browser-to-Backend Requests (Your Responsibility)
+### All other Endpoints (Your Responsibility)
+
+All endpoints other than `/shopware/api/v1/**` and `/shopware/admin/**` are not secured by default.
+
+We recommend that you add a security configuration that denies all other endpoints by default:
+```java
+@Configuration
+public class WebSecurityConfig {
+
+    @Bean
+    public SecurityFilterChain denyOther(HttpSecurity http) throws Exception {
+        return http
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(ar -> ar.anyRequest().denyAll())
+                .exceptionHandling(eh -> eh.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .build();
+    }
+}
+```
 
 If your app has an Admin Extension UI (served as an iframe in Shopware Administration), that UI runs in the user's
-browser. When it calls your custom backend endpoints, those requests come from the browser—not from Shopware—so they
+browser. When it calls your custom backend endpoints, those requests come from the browser, not from Shopware, so they
 don't have Shopware's signature.
 
 For these requests, you need to implement your own authentication. The App Server helps by injecting a token into your

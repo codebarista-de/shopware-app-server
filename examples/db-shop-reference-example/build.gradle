@@ -16,7 +16,7 @@ java {
 }
 
 dependencies {
-    implementation 'de.codebarista:shopware-app-server:0.0.1'
+    implementation 'de.codebarista:shopware-app-server:+'
 
     // Test dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

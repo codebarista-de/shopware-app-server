@@ -31,7 +31,7 @@ custom-db-migration/
 
 ```bash
 cd examples/custom-db-migration
-../../gradlew bootRun
+./gradlew bootRun
 ```
 
 Verify tables were created:

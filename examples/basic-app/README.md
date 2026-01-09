@@ -28,16 +28,15 @@ basic-app/
 
 ```bash
 cd examples/basic-app
-../../gradlew bootRun
+./gradlew bootRun
 ```
 
 The server starts on `http://localhost:8080`.
 
 ### 2. Install in Shopware
 
-1. Copy `manifest.xml` to a directory named `MyShopwareApp`
-2. Zip the directory
-3. Upload via Shopware Administration → Extensions → My Extensions → Upload Extension
+1. Zip the `MyShopwareApp` directory
+2. Upload zip via Shopware Administration → Extensions → My Extensions → Upload Extension
 
 The app will automatically:
 
@@ -57,7 +56,7 @@ app-server:
   map-localhost-ip-to-localhost-domain-name: true  # Enable localhost routing
 ```
 
-For production, set `ssl-only: true` and update manifest.xml URLs to use HTTPS.
+For production, set `ssl-only: true` and update `MyShopwareApp/manifest.xml` URLs to use HTTPS.
 
 ## Code Overview
 
