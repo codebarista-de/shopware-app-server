@@ -2,6 +2,9 @@ package de.codebarista.shopware.appserver;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import de.codebarista.shopware.appserver.api.dto.action.ActionResponseDto;
+import de.codebarista.shopware.appserver.api.dto.action.ActionResponseNotificationDto;
 import de.codebarista.shopware.appserver.api.dto.registration.ShopwareAppConfirmationDto;
 import de.codebarista.shopware.appserver.api.dto.registration.ShopwareAppRegistrationResponseDto;
 import de.codebarista.shopware.appserver.model.ShopwareShopEntityRepository;
@@ -13,16 +16,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.time.Duration;
+import java.nio.charset.StandardCharsets;
+
 import java.util.Objects;
 
 import static de.codebarista.shopware.appserver.api.ApiConstants.SHOPWARE_APP_SIGNATURE_HEADER;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 
 @WebServerTest
 public class AppRegistrationApiTest {
@@ -60,6 +64,36 @@ public class AppRegistrationApiTest {
                 .exchange();
     }
 
+    public static ShopwareAppRegistrationResponseDto registerShopForAppWithShopSignature(WebTestClient webTestClient, ShopwareApp app, String shopId, String shopUrl, String shopSecret) {
+        return requestRegisterShopForAppWithShopSignature(webTestClient, app, shopId, shopUrl, shopSecret)
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBody(ShopwareAppRegistrationResponseDto.class)
+                .returnResult()
+                .getResponseBody();
+    }
+
+    public static WebTestClient.ResponseSpec requestRegisterShopForAppWithShopSignature(
+            WebTestClient webTestClient, ShopwareApp app, String shopId, String shopUrl, String shopSecret) {
+        final UriComponents registrationUriComponents = UriComponentsBuilder.fromPath(URL_REGISTER)
+                .queryParam("shop-id", shopId)
+                .queryParam("shop-url", shopUrl)
+                .queryParam("timestamp", "1701363018")
+                .build();
+
+        String query = Objects.requireNonNull(registrationUriComponents.getQuery());
+        String shopwareAppSignature = TestHelper.hmac256(query, app.getAppSecret());
+        String shopwareShopSignature = TestHelper.hmac256(query, shopSecret);
+        String registrationUrl = registrationUriComponents.toString();
+
+        return webTestClient.get()
+                .uri(registrationUrl)
+                .header(HttpHeaders.HOST, app.getAppKey() + ".app-backend.de")
+                .header(SHOPWARE_APP_SIGNATURE_HEADER, shopwareAppSignature)
+                .header("shopware-shop-signature", shopwareShopSignature)
+                .exchange();
+    }
+
     public static WebTestClient.ResponseSpec requestConfirmRegistration(WebTestClient webTestClient, ShopwareApp app, String shopSecret, String shopId, String shopUrl) {
         try {
             byte[] body = new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsBytes(
@@ -83,11 +117,44 @@ public class AppRegistrationApiTest {
         }
     }
 
+    public static WebTestClient.ResponseSpec requestLifecycleDeleted(
+            WebTestClient webTestClient, ShopwareApp app, String shopSecret, String shopId, String shopUrl) {
+        String body = String.format(
+                "{\"timestamp\":\"1702212669\",\"data\":{\"event\":\"app.deleted\",\"payload\":[]},\"source\":{\"appVersion\":\"0.0.1\",\"shopId\":\"%s\",\"eventId\":\"e4ent1d\",\"url\":\"%s\"}}",
+                shopId, shopUrl);
+        byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
+        String signature = TestHelper.hmac256(bodyBytes, shopSecret);
+
+        return webTestClient.post()
+                .uri("/shopware/api/v1/lifecycle/deleted")
+                .header(HttpHeaders.HOST, app.getAppKey() + ".app-backend.de")
+                .header("shopware-shop-signature", signature)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(bodyBytes)
+                .exchange();
+    }
+
+    public static WebTestClient.ResponseSpec sendAction(
+            WebTestClient webTestClient, ShopwareApp app, String shopSecret, String shopId, String shopUrl, String action) {
+        String body = String.format(
+                "{\"timestamp\":\"1702212669\",\"data\":{\"action\":\"" + action + "\"},\"source\":{\"appVersion\":\"0.0.1\",\"shopId\":\"%s\",\"eventId\":\"e4ent1d\",\"url\":\"%s\"},\"meta\":{}}",
+                shopId, shopUrl);
+        byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
+        String signature = TestHelper.hmac256(bodyBytes, shopSecret);
+
+        return webTestClient.post()
+                .uri("/shopware/api/v1/action")
+                .header(HttpHeaders.HOST, app.getAppKey() + ".app-backend.de")
+                .header("shopware-shop-signature", signature)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(bodyBytes)
+                .exchange();
+    }
+
     @Test
     public void registerAndConfirmShop() {
         final String shopID = "jmpF3ttj2rEnvmfZ";
-        final String shopHost = "my-shop.de";
-        final String shopUrl = "https://" + shopHost;
+        final String shopUrl = "https://my-shop.de";
 
         var app = new TestAppA();
         var registrationResponse = registerShopForApp(webTestClient, app, shopID, shopUrl);
@@ -98,60 +165,63 @@ public class AppRegistrationApiTest {
         assertThat(registrationResponse.getProof()).isEqualTo(expectedProof);
         assertThat(registrationResponse.getError()).isNull();
 
-        // Check that the shop was added to the database...
-        var shops = shopwareShopEntityRepository.findAll();
-        assertThat(shops.size()).isEqualTo(1);
-        var shop = shops.get(0);
-        assertThat(shop.getAppKey()).isEqualTo(app.getAppKey());
-        assertThat(shop.getShopId()).isEqualTo(shopID);
-        assertThat(shop.getShopHost()).isEqualTo(shopHost);
-        assertThat(shop.getRegistrationConfirmedAt()).isNull();
-        // ... and registration is not yet confirmed
-        assertThat(shop.getShopSecret()).isEqualTo(registrationResponse.getShopSecret());
-
         // Send confirmation request
         requestConfirmRegistration(webTestClient, app, registrationResponse.getShopSecret(), shopID, shopUrl).expectStatus().is2xxSuccessful();
-
-        // Check that shop is confirmed in database
-        var confirmedShops = shopwareShopEntityRepository.findAll();
-        assertThat(confirmedShops.size()).isEqualTo(1);
-        var confirmedShop = confirmedShops.get(0);
-        assertThat(confirmedShop.getRegistrationConfirmedAt()).isNotNull();
+        
+        // Check that shop is confirmed by sending an action
+        ActionResponseDto<?> response = sendAction(webTestClient, app, registrationResponse.getShopSecret(), shopID, shopUrl, "foo")
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBody(ActionResponseDto.class)
+                .returnResult()
+                .getResponseBody();
+        assertThat(response).extracting("payload.message").isEqualTo("foo");
     }
 
     @Test
-    @Sql("/insert_deleted_testshop_for_testapp_a.sql")
-    public void reRegisterShopWithSameShopID() {
-        webTestClient = webTestClient.mutate().responseTimeout(Duration.ofDays(1)).build(); // TODO: REMOVE
-
-        final String oldShopId = "jmpF3ttj2rEnvmfZ";
-        final String newShopHost = "myshopurl-new.test";
-        final String newShopUrl = "https://" + newShopHost;
+    public void reRegisterShop() {
+        final String shopID = "jmpF3ttj2rEnvmfZ";
+        final String shopUrl = "https://myshop.de";
 
         var app = new TestAppA();
-        var registrationResponse = registerShopForApp(webTestClient, app, oldShopId, newShopUrl);
+        var registrationResponse = registerShopForApp(webTestClient, app, shopID, shopUrl);
+        requestConfirmRegistration(webTestClient, app, registrationResponse.getShopSecret(), shopID, shopUrl).expectStatus().is2xxSuccessful();
 
-        // Check that the shop-id and app-key have not changed...
-        var shops = shopwareShopEntityRepository.findAll();
-        assertThat(shops.size()).isEqualTo(1);
-        var shop = shops.get(0);
-        assertThat(shop.getAppKey()).isEqualTo(app.getAppKey());
-        assertThat(shop.getShopId()).isEqualTo(oldShopId);
+        // Re-Register shop
+        var reregistrationResponse = registerShopForApp(webTestClient, app, shopID, shopUrl);
+        requestConfirmRegistration(webTestClient, app, reregistrationResponse.getShopSecret(), shopID, shopUrl).expectStatus().is2xxSuccessful();
 
-        // ...but shop-host and shop-url are updated
-        assertThat(shop.getShopHost()).isEqualTo(newShopHost);
-        assertThat(shop.getShopRequestUrl()).isEqualTo(newShopUrl);
+        ActionResponseDto<?> response = sendAction(webTestClient, app, reregistrationResponse.getShopSecret(), shopID, shopUrl, "reregister-test")
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBody(ActionResponseDto.class)
+                .returnResult()
+                .getResponseBody();
+        assertThat(response).extracting("payload.message").isEqualTo("reregister-test");
+    }
 
-        // ... and confirmation was reset
-        assertThat(shop.getRegistrationConfirmedAt()).isNull();
-        assertThat(shop.getShopAdminApiKey()).isNull();
-        assertThat(shop.getShopAdminApiSecretKey()).isNull();
-        assertThat(shop.getShopSecret()).isEqualTo(registrationResponse.getShopSecret());
+    @Test
+    public void reRegisterShopWithDifferentUrl() {
+        final String shopID = "jmpF3ttj2rEnvmfZ";
+        final String oldShopUrl = "https://myshop-old.de";
+        final String newShopUrl = "https://myshop-new.de";
 
-        // ...and shop is no longer marked as deleted
-        assertThat(shop.isMarkedAsDeleted()).isFalse();
+        var app = new TestAppA();
+        var registrationResponse = registerShopForApp(webTestClient, app, shopID, oldShopUrl);
+        requestConfirmRegistration(webTestClient, app, registrationResponse.getShopSecret(), shopID, oldShopUrl).expectStatus().is2xxSuccessful();
 
-        requestConfirmRegistration(webTestClient, app, registrationResponse.getShopSecret(), oldShopId, newShopUrl).expectStatus().is2xxSuccessful();
+        // Re-Register shop
+        var reregistrationResponse = registerShopForApp(webTestClient, app, shopID, newShopUrl);
+        requestConfirmRegistration(webTestClient, app, reregistrationResponse.getShopSecret(), shopID, newShopUrl).expectStatus().is2xxSuccessful();
+
+
+        ActionResponseDto<?> response = sendAction(webTestClient, app, reregistrationResponse.getShopSecret(), shopID, newShopUrl, "reregister-new-url-test")
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBody(ActionResponseDto.class)
+                .returnResult()
+                .getResponseBody();
+        assertThat(response).extracting("payload.message").isEqualTo("reregister-new-url-test");
     }
 
     @Test
@@ -219,11 +289,16 @@ public class AppRegistrationApiTest {
 
         registerShopForApp(webTestClient, app, shopId, shopUrl);
         requestConfirmRegistration(webTestClient, app, "wrong-shop-secret", shopId, shopUrl).expectStatus().isUnauthorized();
+    }
 
-        var confirmedShops = shopwareShopEntityRepository.findAll();
-        assertThat(confirmedShops.size()).isEqualTo(1);
-        var confirmedShop = confirmedShops.get(0);
-        assertThat(confirmedShop.getRegistrationConfirmedAt()).isNull();
+    @Test
+    public void confirmationFailsWithWrongShopUrl() {
+        final var app = new TestAppA();
+        final String shopUrl = "https://myshop.de";
+        final String shopId = "shop-id";
+
+        var registrationResponse =  registerShopForApp(webTestClient, app, shopId, shopUrl);
+        requestConfirmRegistration(webTestClient, app, registrationResponse.getShopSecret(), shopId, shopUrl + ".test").expectStatus().isUnauthorized();
     }
 
     @Test
@@ -269,4 +344,315 @@ public class AppRegistrationApiTest {
 
         assertThat(shopwareShopEntityRepository.count()).isEqualTo(1);
     }
+
+    @Test
+    public void reRegisterConfirmedShopKeepsOldSecretActive() {
+        var app = new TestAppA();
+        String shopId = "test-shop-rotation-1";
+        String shopUrl = "https://myshop.de";
+
+        // Register and confirm
+        var registration = registerShopForApp(webTestClient, app, shopId, shopUrl);
+        String oldSecret = registration.getShopSecret();
+        requestConfirmRegistration(webTestClient, app, oldSecret, shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+
+        // Re-register (get new secret)
+        var reRegistration = registerShopForApp(webTestClient, app, shopId, shopUrl);
+        String newSecret = reRegistration.getShopSecret();
+        assertThat(newSecret).isNotEqualTo(oldSecret);
+
+        // Lifecycle request with OLD secret should succeed (old secret still active)
+        requestLifecycleDeleted(webTestClient, app, oldSecret, shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+    }
+
+    @Test
+    public void reRegisterConfirmedShopNewSecretNotYetActive() {
+        var app = new TestAppA();
+        String shopId = "test-shop-rotation-2";
+        String shopUrl = "https://myshop.de";
+
+        // Register and confirm
+        var registration = registerShopForApp(webTestClient, app, shopId, shopUrl);
+        String oldSecret = registration.getShopSecret();
+        requestConfirmRegistration(webTestClient, app, oldSecret, shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+
+        // Re-register (get new secret)
+        var reRegistration = registerShopForApp(webTestClient, app, shopId, shopUrl);
+        String newSecret = reRegistration.getShopSecret();
+
+        // Lifecycle request with NEW secret should fail (pending, not active yet)
+        requestLifecycleDeleted(webTestClient, app, newSecret, shopId, shopUrl)
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    public void unRegisteredCannotBeUsedForAuthentication() {
+        final String shopID = "jmpF3ttj2rEnvmfZ";
+        final String shopUrl = "https://my-shop.de";
+
+        var app = new TestAppA();
+
+        // Action request should fail (shop is not registered)
+        sendAction(webTestClient, app, "foobar", shopID, shopUrl, "foo").expectStatus().isUnauthorized();
+        
+    }
+
+    @Test
+    public void unconfirmedShopSecretCannotBeUsedForAuthentication() {
+        var app = new TestAppA();
+        String shopId = "test-shop-unconfirmed";
+        String shopUrl = "https://myshop.de";
+
+        // Register (no confirm)
+        var registration = registerShopForApp(webTestClient, app, shopId, shopUrl);
+        String shopSecret = registration.getShopSecret();
+
+        // Action request should fail (shop is not confirmed)
+        sendAction(webTestClient, app, shopSecret, shopId, shopUrl, "foo").expectStatus().isUnauthorized();
+    }
+
+    @Test
+    public void shopSecretCannotBeUsedForConfirmationOfOtherShop() {
+        var app = new TestAppA();
+        String shopIdA = "shop-a";
+        String shopUrlA = "https://a-shop.de";
+        String shopIdB = "shop-b";
+        String shopUrlB = "https://b-shop.de";
+
+        // Register but do not confirm both shops
+        var registrationA = registerShopForApp(webTestClient, app, shopIdA, shopUrlA);
+        var registrationB = registerShopForApp(webTestClient, app, shopIdB, shopUrlB);
+
+        // Try to confirm shop B with secret of shop A and vice-versa -> should fail
+        requestConfirmRegistration(webTestClient, app, registrationA.getShopSecret(), shopIdB, shopUrlB).expectStatus().isUnauthorized();
+        requestConfirmRegistration(webTestClient, app, registrationB.getShopSecret(), shopIdA, shopUrlA).expectStatus().isUnauthorized();
+
+        // Sending events should fails as shops are unconfirmed
+        sendAction(webTestClient, app, registrationA.getShopSecret(), shopIdB, shopUrlB, "foo-b").expectStatus().isUnauthorized();
+        sendAction(webTestClient, app, registrationB.getShopSecret(), shopIdA, shopUrlA, "foo-a").expectStatus().isUnauthorized();
+    }
+
+    @Test
+    public void shopSecretCannotBeUsedForAuthenticationOfOtherShop() {
+        var app = new TestAppA();
+        String shopIdA = "shop-a";
+        String shopUrlA = "https://a-shop.de";
+        String shopIdB = "shop-b";
+        String shopUrlB = "https://b-shop.de";
+
+        // Register and confirm both shops
+        var registrationA = registerShopForApp(webTestClient, app, shopIdA, shopUrlA);
+        requestConfirmRegistration(webTestClient, app, registrationA.getShopSecret(), shopIdA, shopUrlA).expectStatus().is2xxSuccessful();
+        var registrationB = registerShopForApp(webTestClient, app, shopIdB, shopUrlB);
+        requestConfirmRegistration(webTestClient, app, registrationB.getShopSecret(), shopIdB, shopUrlB).expectStatus().is2xxSuccessful();
+
+        // Sending event to shop B with secret of shop A and vice-versa should fail
+        sendAction(webTestClient, app, registrationA.getShopSecret(), shopIdB, shopUrlB, "foo-b").expectStatus().isUnauthorized();
+        sendAction(webTestClient, app, registrationB.getShopSecret(), shopIdA, shopUrlA, "foo-a").expectStatus().isUnauthorized();
+    }
+
+    @Test
+    public void reRegisterUnconfirmedShopNewSecretNotImmediatelyActive() {
+        var app = new TestAppA();
+        String shopId = "test-shop-unconfirmed-rereg";
+        String shopUrl = "https://myshop.de";
+
+        // Register (no confirm)
+        registerShopForApp(webTestClient, app, shopId, shopUrl);
+
+        // Re-register (get new secret)
+        var reRegistration = registerShopForApp(webTestClient, app, shopId, shopUrl);
+        String newSecret = reRegistration.getShopSecret();
+
+        // Lifecycle request with new secret should fail
+        requestLifecycleDeleted(webTestClient, app, newSecret, shopId, shopUrl)
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    public void reRegistrationOfUnconfirmedShopOverwritesPreviousRegistration() {
+        var app = new TestAppA();
+        String shopId = "test-shop-rereg-requires-shop-sig-1";
+        String shopUrl = "https://myshop.de";
+
+        // Register but do not confirm
+        var registration1 = registerShopForApp(webTestClient, app, shopId, shopUrl);
+
+        // Re-register
+        var registration2 = registerShopForApp(webTestClient, app, shopId, shopUrl);
+
+        // Try to confirm with secret from first registration -> should fail
+        requestConfirmRegistration(webTestClient, app, registration1.getShopSecret(), shopId, shopUrl)
+                .expectStatus().isUnauthorized();
+                
+        // Confirmation with secret for last registration should work
+        requestConfirmRegistration(webTestClient, app, registration2.getShopSecret(), shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+    }
+
+    @Test
+    public void reRegistrationOfConfirmedShopOverwritesPreviousReRegistration() {
+        var app = new TestAppA();
+        String shopId = "test-shop-rereg-requires-shop-sig-1";
+        String shopUrl = "https://myshop.de";
+
+        // Register and confirm
+        var registration = registerShopForApp(webTestClient, app, shopId, shopUrl);
+        requestConfirmRegistration(webTestClient, app, registration.getShopSecret(), shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+
+        // Re-register
+        var reregistration1 = registerShopForApp(webTestClient, app, shopId, shopUrl);
+
+        // Re-register again
+        var reregistration2 = registerShopForApp(webTestClient, app, shopId, shopUrl);
+
+        // Try to confirm with secret from first re-registration -> should fail
+        requestConfirmRegistration(webTestClient, app, reregistration1.getShopSecret(), shopId, shopUrl)
+                .expectStatus().isUnauthorized();
+                
+        // Confirmation with secret for last re-registration should work
+        requestConfirmRegistration(webTestClient, app, reregistration2.getShopSecret(), shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+    }
+
+    @Test
+    public void reRegistrationRequiresShopSignatureAfterPreviouslyVerified() {
+        var app = new TestAppA();
+        String shopId = "test-shop-rereg-requires-shop-sig-1";
+        String shopUrl = "https://myshop.de";
+
+        // Register and confirm
+        var registration = registerShopForApp(webTestClient, app, shopId, shopUrl);
+        String shopSecret = registration.getShopSecret();
+        requestConfirmRegistration(webTestClient, app, shopSecret, shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+
+        // Re-register with both app + valid shop signature
+        // From now on the shop signature shall always be required for re-registration of this shop
+        requestRegisterShopForAppWithShopSignature(webTestClient, app, shopId, shopUrl, shopSecret)
+                .expectStatus().is2xxSuccessful();
+
+        // Re-register again with only app signature -> expect failure
+        requestRegisterShopForApp(webTestClient, app, shopId, shopUrl)
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    public void reRegistrationRequiresShopSignatureOnlyForPreviouslyVerifiedShop() {
+        var app = new TestAppA();
+        String shopIdA = "test-shop-a";
+        String shopUrlA = "https://myshop-a.de";
+        String shopIdB = "test-shop-b";
+        String shopUrlB = "https://myshop-b.de";
+
+        // Register and confirm both shops
+        var registrationA = registerShopForApp(webTestClient, app, shopIdA, shopUrlA);
+        String shopSecretA = registrationA.getShopSecret();
+        requestConfirmRegistration(webTestClient, app, shopSecretA, shopIdA, shopUrlA)
+                .expectStatus().is2xxSuccessful();
+        var registrationB = registerShopForApp(webTestClient, app, shopIdB, shopUrlB);
+        String shopSecretB = registrationB.getShopSecret();
+        requestConfirmRegistration(webTestClient, app, shopSecretB, shopIdB, shopUrlB)
+                .expectStatus().is2xxSuccessful();
+
+        // Re-register A only with app signature
+        requestRegisterShopForApp(webTestClient, app, shopIdA, shopUrlA)
+                .expectStatus().is2xxSuccessful();
+        // Re-register B with both app + valid shop signature
+        requestRegisterShopForAppWithShopSignature(webTestClient, app, shopIdB, shopUrlB, shopSecretB)
+                .expectStatus().is2xxSuccessful();
+
+        // Re-register A again with only app signature -> expect success
+        requestRegisterShopForApp(webTestClient, app, shopIdA, shopUrlA)
+                .expectStatus().is2xxSuccessful();
+        // Re-register B again with only app signature -> expect failure
+        requestRegisterShopForApp(webTestClient, app, shopIdB, shopUrlB)
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    public void reRegistrationFailsWithInvalidShopSignatureAfterPreviouslyVerified() {
+        var app = new TestAppA();
+        String shopId = "test-shop-rereg-requires-shop-sig-2";
+        String shopUrl = "https://myshop.de";
+
+        // Register and confirm
+        var registration = registerShopForApp(webTestClient, app, shopId, shopUrl);
+        String shopSecret = registration.getShopSecret();
+        requestConfirmRegistration(webTestClient, app, shopSecret, shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+
+        // Re-register with both valid signatures
+        requestRegisterShopForAppWithShopSignature(webTestClient, app, shopId, shopUrl, shopSecret)
+                .expectStatus().is2xxSuccessful();
+
+        // Re-register with app signature + INVALID shop signature -> expect failure
+        requestRegisterShopForAppWithShopSignature(webTestClient, app, shopId, shopUrl, "wrong-shop-secret")
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    public void registrationWithShopSignatureIgnoredIfNotConfirmed() {
+        var app = new TestAppA();
+        String shopId = "test-shop-rereg-requires-shop-sig-1";
+        String shopUrl = "https://myshop.de";
+
+        // Register with but do not confirm
+        var registration1 = registerShopForApp(webTestClient, app, shopId, shopUrl);
+
+        // Register again with both app + valid shop signature -> should succeed but shop signature is ignored
+        var registration2 = registerShopForAppWithShopSignature(webTestClient, app, shopId, shopUrl, registration1.getShopSecret());
+        requestConfirmRegistration(webTestClient, app, registration2.getShopSecret(), shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+
+        // Re-register again with only app signature -> expect success as shop signature was ignored on previous registration
+        var reregistration = registerShopForApp(webTestClient, app, shopId, shopUrl);
+        requestConfirmRegistration(webTestClient, app, reregistration.getShopSecret(), shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+
+        requestLifecycleDeleted(webTestClient, app, reregistration.getShopSecret(), shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+    }
+
+    @Test
+    public void registrationFailsWithBlankTimestamp() {
+        var app = new TestAppA();
+        String query = "shop-id=shop1&shop-url=https://myshop.de&timestamp=";
+        String signature = TestHelper.hmac256(query, app.getAppSecret());
+
+        webTestClient.get()
+                .uri(URL_REGISTER + "?" + query)
+                .header(HttpHeaders.HOST, app.getAppKey() + ".app-backend.de")
+                .header(SHOPWARE_APP_SIGNATURE_HEADER, signature)
+                .exchange()
+                .expectStatus()
+                .isUnauthorized();
+    }
+
+    @Test
+    public void registrationFailsWithMissingAppSignatureHeader() {
+        webTestClient.get()
+                .uri(URL_REGISTER + "?shop-id=shop1&shop-url=https://myshop.de&timestamp=1701363018")
+                .header(HttpHeaders.HOST, new TestAppA().getAppKey() + ".app-backend.de")
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+    }
+
+    @Test
+    public void registrationFailsWithBlankAppSignature() {
+        var app = new TestAppA();
+        webTestClient.get()
+                .uri(URL_REGISTER + "?shop-id=shop1&shop-url=https://myshop.de&timestamp=1701363018")
+                .header(HttpHeaders.HOST, app.getAppKey() + ".app-backend.de")
+                .header(SHOPWARE_APP_SIGNATURE_HEADER, "")
+                .exchange()
+                .expectStatus()
+                .isUnauthorized();
+    }
+
 }

@@ -26,7 +26,7 @@ public class HttpRequestResponseLoggingInterceptor implements ClientHttpRequestI
     }
 
     private void logRequest(HttpRequest request, byte[] body) {
-        logger.atInfo()
+        logger.atDebug()
                 .setMessage("Request")
                 .addKeyValue("URI: {}", request.getURI())
                 .addKeyValue("Method: {}", request.getMethod())
@@ -42,7 +42,7 @@ public class HttpRequestResponseLoggingInterceptor implements ClientHttpRequestI
         while ((line = reader.readLine()) != null) {
             body.append(line).append('\n');
         }
-        logger.atInfo()
+        logger.atDebug()
                 .setMessage("Response")
                 .addKeyValue("Status Code: {}", response.getStatusCode())
                 .addKeyValue("Headers: {}", response.getHeaders())

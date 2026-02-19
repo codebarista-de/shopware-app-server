@@ -23,8 +23,9 @@ public class TokenServiceTest {
 
         var shopManagementService = mock(ShopManagementService.class);
         String shopId = "shopId";
-        var shopEntity = new ShopwareShopEntity("appKey", shopId, "shopHost",
-                "requestUrl", "shopSecret", "1.2.3.4");
+        var shopEntity = new ShopwareShopEntity("appKey", shopId);
+        shopEntity.setPendingRegistration("testSecret", "https://my-shop.de");
+        shopEntity.confirmPendingRegistrationAndAddShopApiSecrets("apiKey", "apiSecret");
         when(shopManagementService.getShopByIdOrThrow(any(), any())).thenReturn(shopEntity);
         when(shopManagementService.getShopById(any(), any())).thenReturn(Optional.of(shopEntity));
 

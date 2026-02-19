@@ -31,8 +31,8 @@ class SqliteConfigurationTest {
 
     @Test
     void shopEntityAppKeyAndShopIDUniqueConstraint() {
-        ShopwareShopEntity shop = new ShopwareShopEntity("app-key", "shop-id", "myshop.de", "http:://myshop.de", "shop-secret", "6.4.0.0");
-        ShopwareShopEntity shopDup = new ShopwareShopEntity("app-key", "shop-id", "staging.myshop.de", "http:://staging.myshop.de", "staging-shop-secret", "6.4.0.0");
+        ShopwareShopEntity shop = new ShopwareShopEntity("app-key", "shop-id");
+        ShopwareShopEntity shopDup = new ShopwareShopEntity("app-key", "shop-id");
         shopwareShopEntityRepository.save(shop);
         assertThatThrownBy(() -> {
             shopwareShopEntityRepository.save(shopDup);

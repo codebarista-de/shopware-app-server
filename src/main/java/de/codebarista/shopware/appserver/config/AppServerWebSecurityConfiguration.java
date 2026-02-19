@@ -46,7 +46,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
  *   </li>
  *   <li>
  *     <strong>Role-Based Access Control:</strong>
- *     Endpoints require either {@link #ROLE_SHOPWARE_SHOP} or {@link #ROLE_SHOPWARE_APP}.
+ *     Endpoints require {@link #ROLE_SHOPWARE_SHOP}.
  *     See individual endpoint rules for details.
  *   </li>
  * </ul>
@@ -67,7 +67,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 public class AppServerWebSecurityConfiguration {
 
     public static final String ROLE_SHOPWARE_SHOP = "ROLE_SHOPWARE_SHOP";
-    public static final String ROLE_SHOPWARE_APP = "ROLE_SHOPWARE_APP";
+    public static final String ROLE_SHOPWARE_PENDING_SHOP = "ROLE_SHOPWARE_PENDING_SHOP";
 
     private final ShopwareSignatureVerificationFilter signatureVerificationFilter;
 
@@ -87,14 +87,18 @@ public class AppServerWebSecurityConfiguration {
         return http
                 .securityMatcher("/shopware/api/v1/**")
                 .csrf(AbstractHttpConfigurer::disable)
+                .anonymous(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterAfter(signatureVerificationFilter, BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(ar -> ar
-                        .requestMatchers(HttpMethod.GET, "/shopware/api/v1/registration/register").hasAuthority(ROLE_SHOPWARE_APP)
+                        .requestMatchers(HttpMethod.GET, "/shopware/api/v1/registration/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/shopware/api/v1/registration/confirm").hasAnyAuthority(ROLE_SHOPWARE_PENDING_SHOP)
                         .anyRequest().hasAuthority(ROLE_SHOPWARE_SHOP))
                 .exceptionHandling(eh -> eh
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                response.setStatus(HttpStatus.UNAUTHORIZED.value())))
                 .build();
     }
 
@@ -104,6 +108,7 @@ public class AppServerWebSecurityConfiguration {
         return http
                 .securityMatcher("/shopware/admin/**")
                 .csrf(AbstractHttpConfigurer::disable)
+                .anonymous(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterAfter(signatureVerificationFilter, BasicAuthenticationFilter.class)
@@ -111,7 +116,9 @@ public class AppServerWebSecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/shopware/admin/*/*/assets/**").permitAll()
                         .anyRequest().hasAuthority(ROLE_SHOPWARE_SHOP))
                 .exceptionHandling(eh -> eh
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                response.setStatus(HttpStatus.UNAUTHORIZED.value())))
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .build();

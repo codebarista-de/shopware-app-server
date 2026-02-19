@@ -7,6 +7,8 @@ import de.codebarista.shopware.appserver.ShopwareApp;
 import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 @Component
@@ -64,12 +66,11 @@ public class TestAppA implements ShopwareApp {
 
     @Override
     public void onEvent(ShopwareEventDto event, long internalShopId, @Nullable Locale userLocale, String shopwareLanguageId) {
-
     }
 
     @Override
     public ActionResponseDto<?> onAction(ActionRequestDto action, long internalShopId, @Nullable Locale userLocale, String shopwareLanguageId) {
-        return null;
+        return ActionResponseDto.infoNotification(action.data().action());
     }
 
     public static final String VERSION = "v1.2.3";

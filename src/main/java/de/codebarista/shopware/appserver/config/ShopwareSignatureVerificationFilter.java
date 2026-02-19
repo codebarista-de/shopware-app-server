@@ -19,7 +19,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -34,9 +33,6 @@ import java.util.List;
  * This is undesired as it must not apply to all URLs exposed by App implementations.
  */
 public class ShopwareSignatureVerificationFilter extends OncePerRequestFilter {
-    private record ShopInfo(ShopwareApp app, String shopId) {
-    }
-
     private static final Logger LOGGER = LoggerFactory.getLogger(ShopwareSignatureVerificationFilter.class);
     private final ShopManagementService shopManagementService;
     private final SignatureService signatureService;
@@ -65,47 +61,38 @@ public class ShopwareSignatureVerificationFilter extends OncePerRequestFilter {
         final String host = request.getHeader(HttpHeaders.HOST);
         final ShopwareApp app = appLookupService.tryGetForHost(host);
         if (app == null) {
-            LOGGER.warn("Could not authenticate request: No app for host {}", host);
+            LOGGER.atWarn()
+                .setMessage("Shop authentication failed: No app for host {}.")
+                .addArgument(host)
+                .addKeyValue("request", request)
+                .log();
+        } else if (HttpMethod.GET.matches(request.getMethod())) {
+            String signature = request.getParameter(ApiConstants.SHOPWARE_SHOP_SIGNATURE_HEADER);
+            byte[] message = getValidationQueryString(request, signature);
+            String shopId = request.getParameter("shop-id");
+            checkSignatureAndSetAuthentication(request, app, shopId, signature, message);
             filterChain.doFilter(request, response);
             return;
-        }
-
-        // Check for app signature first (used for registration request)
-        if (isValidAppSignature(request, app)) {
-            setAuthentication(app.getAppName(), AppServerWebSecurityConfiguration.ROLE_SHOPWARE_APP);
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // Check for shop signature in GET request
-        if (HttpMethod.GET.matches(request.getMethod())) {
-            Result<ShopInfo> info = getShopInfoIfGetRequestValid(request, app);
-            if (info.isError()) {
-                LOGGER.warn("Shop authentication failed for GET {}. {}", request.getRequestURI(), info.getError());
-            } else {
-                setAuthentication(info.getResult().shopId, AppServerWebSecurityConfiguration.ROLE_SHOPWARE_SHOP);
-            }
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // Check for shop signature in POST request
-        if (HttpMethod.POST.matches(request.getMethod())) {
+        } else if (HttpMethod.POST.matches(request.getMethod())) {
             // To validate a post request the complete request body must be read.
             // Wrap the request so that the body can be read multiple times.
             var reusableRequest = new ReusableRequestWrapper(request);
-            Result<ShopInfo> info = getShopInfoIfPostRequestValid(reusableRequest, app);
-            if (info.isError()) {
-                LOGGER.warn("Shop authentication failed for POST {}. {}", request.getRequestURI(), info.getError());
-            } else {
-                setAuthentication(info.getResult().shopId, AppServerWebSecurityConfiguration.ROLE_SHOPWARE_SHOP);
-            }
+            String signature = reusableRequest.getHeader(ApiConstants.SHOPWARE_SHOP_SIGNATURE_HEADER);
+            byte[] body = reusableRequest.getInputStream().readAllBytes();
+            String shopId = getShopIdFromBody(body);
+            checkSignatureAndSetAuthentication(reusableRequest, app, shopId, signature, body);
             // Pass the wrapped request to the filter chain!
             filterChain.doFilter(reusableRequest, response);
             return;
+        } else {
+            LOGGER.atWarn()
+                .setMessage("Shop authentication failed: Unsupported method {}.")
+                .addArgument(request.getMethod())
+                .addKeyValue("app", app.getAppName())
+                .addKeyValue("request", request)
+                .log();
         }
 
-        LOGGER.warn("Shop authentication failed for {} {}. Unsupported method", request.getMethod(), request.getRequestURI());
         filterChain.doFilter(request, response);
     }
 
@@ -114,21 +101,90 @@ public class ShopwareSignatureVerificationFilter extends OncePerRequestFilter {
         return uri.matches(".*\\.(js|css|ttf|woff|woff2|eot|svg|jpg|jpeg|png|gif|ico)$");
     }
 
-    private boolean isValidAppSignature(HttpServletRequest request, ShopwareApp app) {
-        if (!HttpMethod.GET.matches(request.getMethod())) {
-            return false;
+    private String getShopIdFromBody(byte[] body) throws IOException {
+        try {
+            JsonNode node = objectMapper.readTree(body);
+            if (!node.isObject()) {
+                LOGGER.warn("Request body is not a JSON object");
+                return null;
+            }
+            // The registration confirmation request has the shopId property directly in the root object
+            JsonNode rootShopId = node.get("shopId");
+            if (rootShopId != null && rootShopId.isTextual()) {
+                return rootShopId.textValue();
+            }
+            // All other requests have the shopId in the source object
+            JsonNode source = node.get("source");
+            if (source != null && source.isObject()) {
+                JsonNode sourceShopId = source.get("shopId");
+                if (sourceShopId != null && sourceShopId.isTextual()) {
+                    return sourceShopId.textValue();
+                }
+            }
+            LOGGER.warn("ShopId not found in request body");
+        } catch (IOException e) {
+            LOGGER.warn("Malformed JSON body.", e);
         }
-        String signature = request.getHeader(ApiConstants.SHOPWARE_APP_SIGNATURE_HEADER);
-        if (signature == null) {
-            LOGGER.debug("App signature verification failed: Missing signature header");
-            return false;
+        return null;
+    }
+
+    private byte[] getValidationQueryString(HttpServletRequest request, String signature) {
+        String queryString = request.getQueryString();
+        if (signature == null || queryString == null) {
+            return new byte[0];
         }
-        String queryWithoutSignature = request.getQueryString().replace(String.format("&%s=%s", ApiConstants.SHOPWARE_APP_SIGNATURE_HEADER, signature), "");
-        if (!signatureService.verifySignature(queryWithoutSignature.getBytes(StandardCharsets.UTF_8), app.getAppSecret(), signature)) {
-            LOGGER.warn("App signature verification failed: Invalid signature");
-            return false;
+        // Shopware should never add the signature as the first parameter of the query string.
+        // At least the official PHP-SDK expects the signature parameter to be concatenated to the query string with a &
+        String queryWithoutSignature = queryString.replace(String.format("&%s=%s", ApiConstants.SHOPWARE_SHOP_SIGNATURE_HEADER, signature), "");
+        return queryWithoutSignature.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private void checkSignatureAndSetAuthentication(HttpServletRequest request, ShopwareApp app, String shopId, String signature, byte[] message) {
+        if (shopId == null || shopId.isBlank()) {
+            LOGGER.atWarn()
+                .setMessage("Shop authentication failed: Missing shop ID.")
+                .addKeyValue("app", app.getAppName())
+                .addKeyValue("request", request)
+                .log();
+            return;
         }
-        return true;
+        if (signature == null || signature.isBlank()) {
+            LOGGER.atWarn()
+                .setMessage("Shop authentication failed: Missing signature.")
+                .addKeyValue("app", app.getAppName())
+                .addKeyValue("shop-id", shopId)
+                .addKeyValue("request", request)
+                .log();
+            return;
+        }
+        ShopwareShopEntity shop = shopManagementService.getShopById(app, shopId).orElse(null);
+        if (shop == null) {
+            LOGGER.atWarn()
+                .setMessage("Shop authentication failed: Unknown shop ID.")
+                .addKeyValue("app", app.getAppName())
+                .addKeyValue("shop-id", shopId)
+                .addKeyValue("request", request)
+                .log();
+            return;
+        }
+        if (signatureService.verifySignature(message, shop.getShopSecret(), signature)) {
+            setAuthentication(shopId, AppServerWebSecurityConfiguration.ROLE_SHOPWARE_SHOP);
+        } else if (signatureService.verifySignature(message, shop.getPendingShopSecret(), signature)) {
+            // If a shop is registered for the first time or if an existing shop is re-registered, the
+            // shop secret is pending until it has been confirmed. The confirm endpoint is protected with
+            // the pending signature. Since it's a POST endpoint, signature verification needs the raw
+            // request body. By the time the controller method runs, Spring has already consumed the
+            // InputStream to populate @RequestBody, so the verification must happen here in the filter
+            // using the ReusableRequestWrapper.
+            setAuthentication(shopId, AppServerWebSecurityConfiguration.ROLE_SHOPWARE_PENDING_SHOP);
+        } else {
+            LOGGER.atWarn()
+                .setMessage("Shop authentication failed: Invalid signature.")
+                .addKeyValue("app", app.getAppName())
+                .addKeyValue("shop-id", shopId)
+                .addKeyValue("request", request)
+                .log();
+        }
     }
 
     private void setAuthentication(String principal, String authority) {
@@ -137,74 +193,5 @@ public class ShopwareSignatureVerificationFilter extends OncePerRequestFilter {
                 null,
                 List.of(new SimpleGrantedAuthority(authority)))
         );
-    }
-
-    private Result<ShopInfo> getShopInfoIfPostRequestValid(HttpServletRequest request, ShopwareApp app) throws
-            IOException {
-        String signature = request.getHeader(ApiConstants.SHOPWARE_SHOP_SIGNATURE_HEADER);
-        byte[] body = request.getInputStream().readAllBytes();
-        Result<ShopInfo> shopInfo = getShopInfoFromBody(body, app);
-        if (shopInfo.isError()) {
-            return shopInfo;
-        }
-        if (isSignatureValid(body, signature, shopInfo.getResult())) {
-            return shopInfo;
-        }
-        return Result.error("Invalid signature for app %s", app);
-    }
-
-    private Result<ShopInfo> getShopInfoFromBody(byte[] body, ShopwareApp app) {
-        try {
-            JsonNode node = objectMapper.readTree(body);
-            if (!node.isObject()) {
-                return Result.error("Request body is not a JSON object.");
-            }
-            // The registration confirmation request has the shopId property directly in the root object
-            JsonNode rootShopId = node.get("shopId");
-            if (rootShopId != null && rootShopId.isTextual()) {
-                return Result.success(new ShopInfo(app, rootShopId.textValue()));
-            }
-            // All other requests have the shopId in the source object
-            JsonNode source = node.get("source");
-            if (source != null && source.isObject()) {
-                JsonNode sourceShopId = source.get("shopId");
-                if (sourceShopId != null && sourceShopId.isTextual()) {
-                    return Result.success(new ShopInfo(app, sourceShopId.textValue()));
-                }
-            }
-            return Result.error("ShopId not found in request body");
-        } catch (IOException e) {
-            return Result.error("Request body is not valid JSON. %s", e.getMessage());
-        }
-    }
-
-
-    private boolean isSignatureValid(byte[] payload, String shopwareShopSignature, ShopInfo shopInfo) {
-        if (shopInfo == null) {
-            return false;
-        }
-        return shopManagementService.getShopById(shopInfo.app, shopInfo.shopId)
-                .map(ShopwareShopEntity::getShopSecret)
-                .map(shopSecret -> signatureService.verifySignature(payload, shopSecret, shopwareShopSignature))
-                .orElse(false);
-    }
-
-    private Result<ShopInfo> getShopInfoIfGetRequestValid(HttpServletRequest request, ShopwareApp app) {
-        String shopId = request.getParameter("shop-id");
-        if (shopId == null) {
-            return Result.error("Missing shop-id parameter");
-        }
-        String signature = request.getParameter(ApiConstants.SHOPWARE_SHOP_SIGNATURE_HEADER);
-        if (signature == null) {
-            return Result.error("Missing signature parameter");
-        }
-        var info = new ShopInfo(app, shopId);
-        // Shopware should never add the signature as the first parameter of the query string.
-        // At least the official PHP-SDK expects the signature parameter to be concatenated to the query string with a &
-        String queryWithoutSignature = request.getQueryString().replace(String.format("&%s=%s", ApiConstants.SHOPWARE_SHOP_SIGNATURE_HEADER, signature), "");
-        if (isSignatureValid(queryWithoutSignature.getBytes(StandardCharsets.UTF_8), signature, info)) {
-            return Result.success(info);
-        }
-        return Result.error("Invalid signature");
     }
 }

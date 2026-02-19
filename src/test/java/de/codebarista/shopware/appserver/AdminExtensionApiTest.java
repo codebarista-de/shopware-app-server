@@ -4,11 +4,13 @@ import de.codebarista.shopware.appserver.model.ShopwareShopEntity;
 import de.codebarista.shopware.appserver.service.AppLookupService;
 import de.codebarista.shopware.appserver.service.ShopManagementService;
 import de.codebarista.shopware.testutils.TestAppA;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.NonNull;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -32,7 +34,7 @@ public class AdminExtensionApiTest {
     private static final String SHOPWARE_SHOP_SIGNATURE =
             "2ad8ce4119d3af34d298358e0e070b5f6e0948c075e9686b225d26276ca54ece";
     private static final String HOST_HEADER_VALUE = TestAppA.APP_KEY + ".app-backend.de";
-    private static final String REQUEST_URL = "/shopware/admin/" + TestAppA.ADMIN_EXT_FOLDER + "/v1/index.html?location-id=sw-main-hidden"
+    private static final @NonNull String REQUEST_URL = "/shopware/admin/" + TestAppA.ADMIN_EXT_FOLDER + "/v1/index.html?location-id=sw-main-hidden"
             + "&privileges=%7B%22read%22%3A%5B%22order%22%2C%22order_line_item%22%2C%22product%22%2C%22state_machine_state%22%5D%2C%22update%22%3A%5B%22order_line_item%22%5D%7D"
             + "&shop-id=" + SHOP_ID
             + "&shop-url=" + SHOP_URL
@@ -132,7 +134,11 @@ public class AdminExtensionApiTest {
     }
 
     private void prepareMocks(String shopSecret) {
-        var shop = new ShopwareShopEntity(TestAppA.APP_KEY, SHOP_ID, SHOP_HOST, SHOP_URL, shopSecret, VERSION);
+        var shop = new ShopwareShopEntity(TestAppA.APP_KEY, SHOP_ID);
+        shop.updateShopwareVersion(VERSION);
+        shop.setPendingRegistration(shopSecret, SHOP_URL);
+        shop.setShopHost(SHOP_HOST);
+        shop.confirmPendingRegistrationAndAddShopApiSecrets("apiKey", "secretKey");
         when(shopManagementService.getShopById(isA(TestAppA.class), eq(SHOP_ID))).thenReturn(Optional.of(shop));
         when(shopManagementService.getShopByIdOrThrow(isA(TestAppA.class), eq(SHOP_ID))).thenReturn(shop);
     }

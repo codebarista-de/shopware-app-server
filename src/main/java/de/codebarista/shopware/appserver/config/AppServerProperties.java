@@ -26,6 +26,13 @@ public class AppServerProperties {
      */
     private boolean sslOnly = true;
 
+    /**
+     * Enforce shop signature verification on re-registration.
+     * When enabled, all re-registration requests for confirmed shops must include
+     * a valid {@code shopware-shop-signature} header.
+     */
+    private boolean enforceReRegistrationWithShopSignature = false;
+
     public boolean isHttpRequestResponseLoggingEnabled() {
         return httpRequestResponseLoggingEnabled;
     }
@@ -60,5 +67,13 @@ public class AppServerProperties {
      */
     public void setSslOnly(boolean sslOnly) {
         this.sslOnly = sslOnly;
+    }
+
+    public boolean isReRegistrationWithShopSignatureEnforced() {
+        return enforceReRegistrationWithShopSignature;
+    }
+
+    public void setEnforceReRegistrationWithShopSignature(boolean enforceReRegistrationWithShopSignature) {
+        this.enforceReRegistrationWithShopSignature = enforceReRegistrationWithShopSignature;
     }
 }

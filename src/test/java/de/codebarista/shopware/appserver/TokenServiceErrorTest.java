@@ -162,10 +162,9 @@ public class TokenServiceErrorTest {
     public void generateAndValidateTokenFlowWithValidShop() {
         // Setup valid shop
         String shopId = "testShop";
-        ShopwareShopEntity shop = new ShopwareShopEntity(
-                testApp.getAppKey(), shopId, "localhost",
-                "http://localhost:8000", "testSecret", "6.5.0"
-        );
+        ShopwareShopEntity shop = new ShopwareShopEntity(testApp.getAppKey(), shopId);
+        shop.setPendingRegistration("testSecret", "https://my-shop.de");
+        shop.confirmPendingRegistrationAndAddShopApiSecrets("apiKey", "apiSecret");
 
         when(shopManagementService.getShopByIdOrThrow(testApp, shopId)).thenReturn(shop);
         when(shopManagementService.getShopById(testApp, shopId)).thenReturn(Optional.of(shop));
