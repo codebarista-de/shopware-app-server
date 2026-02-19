@@ -1,8 +1,0 @@
-INSERT INTO SHOPWARE_SHOP(ID, APP_KEY, SHOP_ID, SHOP_HOST, SHOP_REQUEST_URL, SHOP_SECRET, REGISTRATION_REQUESTED_AT,
-            CONFIRMED, SHOP_ADMIN_API_KEY, SHOP_ADMIN_SECRET_KEY, REGISTRATION_CONFIRMED_AT,
-            APP_VERSION, APP_VERSION_LAST_UPDATED_AT, SHOPWARE_VERSION, SHOPWARE_VERSION_LAST_UPDATED_AT,
-            LAST_USED_AT, DELETED_AT)
-    VALUES(1234, "test-a", "jmpF3ttj2rEnvmfZ", "myshopurl-old.test", "http://myshopurl-old.test",
-            "qwertzuiopasdfghjklyxcvbnm0123456789", "2021-12-01 00:00:00.000", 1, "old-adminkey", "old-adminsecret",
-            "2021-12-01 00:00:00.000", "0.0.1", "2021-12-01 01:00:00.000",
-            "6.X.X.X", "2021-12-01 02:00:00.000", null, "2021-12-02 00:00:00.000");

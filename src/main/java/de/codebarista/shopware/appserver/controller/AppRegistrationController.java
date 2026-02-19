@@ -1,8 +1,10 @@
 package de.codebarista.shopware.appserver.controller;
 
+import de.codebarista.shopware.appserver.api.ApiConstants;
 import de.codebarista.shopware.appserver.api.dto.registration.ShopwareAppConfirmationDto;
 import de.codebarista.shopware.appserver.api.dto.registration.ShopwareAppRegistrationResponseDto;
 import de.codebarista.shopware.appserver.config.AppServerProperties;
+import de.codebarista.shopware.appserver.model.ShopwareShopEntity;
 import de.codebarista.shopware.appserver.service.AppLookupService;
 import de.codebarista.shopware.appserver.service.ShopManagementService;
 import de.codebarista.shopware.appserver.ShopwareApp;
@@ -11,9 +13,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,15 +25,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.nio.charset.StandardCharsets;
+
 @RestController
 @RequestMapping("/shopware/api/v1/registration")
 public class AppRegistrationController {
     private static final Logger LOGGER = LoggerFactory.getLogger(AppRegistrationController.class);
-    public final String CONFIRMATION_URL = "/shopware/api/v1/registration/confirm";
+    private static final String CONFIRMATION_URL = "/shopware/api/v1/registration/confirm";
     private final ShopManagementService shopManagementService;
     private final SignatureService signatureService;
     private final AppLookupService appLookupService;
-    private final boolean sslOnly;
+    private final AppServerProperties appServerProperties;
 
     public AppRegistrationController(ShopManagementService shopManagementService,
                                      SignatureService signatureService,
@@ -40,29 +44,70 @@ public class AppRegistrationController {
         this.shopManagementService = shopManagementService;
         this.signatureService = signatureService;
         this.appLookupService = appLookupService;
-        this.sslOnly = appServerProperties.isSslOnly();
+        this.appServerProperties = appServerProperties;
     }
 
     @GetMapping("/register")
     ResponseEntity<ShopwareAppRegistrationResponseDto> register(
-            HttpServletRequest servletRequest,
+            HttpServletRequest request,
             @RequestHeader(HttpHeaders.HOST) String host,
+            @RequestHeader(ApiConstants.SHOPWARE_APP_SIGNATURE_HEADER) String appSignature,
+            @Nullable @RequestHeader(value = ApiConstants.SHOPWARE_SHOP_SIGNATURE_HEADER, required = false) String shopSignature,
             @RequestParam("shop-id") String shopId,
             @RequestParam("shop-url") String shopUrl,
-            @RequestParam("timestamp") Long timestamp,
+            @RequestParam String timestamp,
             @Nullable @RequestHeader(value = "sw-version", required = false) String shopwareVersion // Shopware >= 6.4.1.0
     ) {
-
-        ShopwareApp app = appLookupService.getAppForHost(host);
-        LOGGER.info("App installation in progress: {}, URL: {}, ID: {}", app, shopUrl, shopId);
-
-        if (shopId.isBlank() || shopUrl.isBlank()) {
-            throw new AccessDeniedException("Shop ID and Shop URL must not be blank.");
+        if (shopId.isBlank() || shopUrl.isBlank() || timestamp.isBlank() || appSignature.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        String shopSecret = shopManagementService.registerShop(app, shopId, shopUrl, shopwareVersion);
+        final ShopwareApp app = appLookupService.getAppForHost(host);
+        final byte[] validationQuery = String.format("shop-id=%s&shop-url=%s&timestamp=%s", shopId, shopUrl, timestamp).getBytes(StandardCharsets.UTF_8);
+
+        // Verify app signature
+        if (!signatureService.verifySignature(validationQuery, app.getAppSecret(), appSignature)) {
+            LOGGER.atError().setMessage("Registration failed: Invalid app signature")
+                .addKeyValue("app", app.getAppName())
+                .addKeyValue("shop-id", shopId)
+                .addKeyValue("shop-url", shopUrl)
+                .log();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        boolean shopSignatureVerified = false;
+        ShopwareShopEntity existingShop = shopManagementService.getShopById(app, shopId).orElse(null);
+        // Verify shop signature on re-registration only if existing shop is confirmed
+        if (existingShop != null && existingShop.isRegistrationConfirmed()) {
+            if (shopSignature != null) {
+                shopSignatureVerified = signatureService.verifySignature(validationQuery, existingShop.getShopSecret(), shopSignature);
+                if (!shopSignatureVerified) {
+                    LOGGER.atError().setMessage("Registration failed: Invalid shop signature")
+                        .addKeyValue("app", app.getAppName())
+                        .addKeyValue("shop-id", shopId)
+                        .addKeyValue("shop-url", shopUrl)
+                        .log();
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                }
+            } else if (existingShop.reRegistrationRequiresShopSignature() || appServerProperties.isReRegistrationWithShopSignatureEnforced()) {
+                LOGGER.atError().setMessage("Registration failed: Missing required shop signature")
+                    .addKeyValue("app", app.getAppName())
+                    .addKeyValue("shop-id", shopId)
+                    .addKeyValue("shop-url", shopUrl)
+                    .log();
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            // else: The shop signature is missing but neither the shop nor the global configuration
+            // requires it. A shop requires it once it has previously re-registered with a verified shop
+            // signature. This is allowed for backwards compatibility with Shopware versions that do not
+            // send a shop signature on re-registration.
+        }
+
+        LOGGER.info("App installation in progress: {}, URL: {}, ID: {}", app, shopUrl, shopId);
+
+        String shopSecret = shopManagementService.registerShop(app, shopId, shopUrl, shopwareVersion, shopSignatureVerified);
         String proof = calculateProof(app, shopId, shopUrl);
-        String confirmationUrl = buildConfirmationUrl(servletRequest);
+        String confirmationUrl = buildConfirmationUrl(request);
         return ResponseEntity.ok(ShopwareAppRegistrationResponseDto.success(proof, shopSecret, confirmationUrl));
     }
 
@@ -76,7 +121,7 @@ public class AppRegistrationController {
         // allow url with HTTP scheme only, if sslOnly is false
         boolean requestSchemeWithoutSsl = servletRequest.getScheme().equals("http");
         String scheme = "https";
-        if (requestSchemeWithoutSsl && !sslOnly) {
+        if (requestSchemeWithoutSsl && !appServerProperties.isSslOnly()) {
             scheme = "http";
         }
 
@@ -103,7 +148,7 @@ public class AppRegistrationController {
         } else {
             LOGGER.warn("App {} installation aborted. URL: {}, ID: {}",
                     app, confirmation.getShopUrl(), confirmation.getShopId());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
 }

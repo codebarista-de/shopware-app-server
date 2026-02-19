@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import de.codebarista.shopware.appserver.exception.InvalidSignatureException;
 import de.codebarista.shopware.appserver.exception.SignatureInitializationException;
 
 import javax.crypto.Mac;
@@ -46,21 +45,21 @@ public class SignatureService {
     public SignedResponse serializeAndCalculateSignature(@Nonnull Object data, @Nonnull String secret) {
         //noinspection ConstantValue
         if (data == null || secret == null) {
-            throw new InvalidSignatureException("Data or secret cannot be null");
+            throw new IllegalArgumentException("Data or secret cannot be null");
         }
         try {
             String response = objectMapper.writeValueAsString(data);
             String signature = calculateSignature(response, secret);
             return new SignedResponse(response, signature);
         } catch (JsonProcessingException e) {
-            throw new InvalidSignatureException(String.format("Could not calculate signature: %s", e.getMessage()), e);
+            throw new IllegalArgumentException(String.format("Could not calculate signature: %s", e.getMessage()), e);
         }
     }
 
     public String calculateSignature(@Nonnull String data, @Nonnull String secret) {
         //noinspection ConstantValue
         if (data == null || secret == null) {
-            throw new InvalidSignatureException("Data or secret cannot be null");
+            throw new IllegalArgumentException("Data or secret cannot be null");
         }
         try {
             SecretKeySpec keySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), SIGNATURE_ALGORITHM);
@@ -68,12 +67,12 @@ public class SignatureService {
             mac.init(keySpec);
             return bytesToHex(mac.doFinal(data.getBytes()));
         } catch (NoSuchAlgorithmException | InvalidKeyException | IllegalArgumentException e) {
-            throw new InvalidSignatureException("Could not calculate signature", e);
+            throw new IllegalArgumentException("Could not calculate signature", e);
         }
     }
 
     public boolean verifySignature(@Nullable byte[] message, @Nullable String secret, @Nullable String signature) {
-        if (secret == null || signature == null || message == null) {
+        if (secret == null || secret.isBlank() || signature == null || message == null) {
             return false;
         }
 
@@ -94,7 +93,7 @@ public class SignatureService {
      */
     public String hash(String data) {
         if (data == null) {
-            throw new InvalidSignatureException("Data to hash cannot be null");
+            throw new IllegalArgumentException("Data to hash cannot be null");
         }
         final byte[] hashBytes = HASH_DIGEST.get().digest(data.getBytes(StandardCharsets.UTF_8));
         return bytesToHex(hashBytes);

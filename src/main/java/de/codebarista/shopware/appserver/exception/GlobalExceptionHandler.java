@@ -35,4 +35,10 @@ public class GlobalExceptionHandler {
     ResponseEntity<Resource> handleException(final AccessDeniedException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+
+    @ExceptionHandler(NoSuchAppException.class)
+    ResponseEntity<String> handleException(final NoSuchAppException e) {
+        LOGGER.error(e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
 }

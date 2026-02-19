@@ -8,6 +8,7 @@ import de.codebarista.shopware.appserver.exception.NoSuchShopException;
 import de.codebarista.shopware.appserver.model.ShopwareShopEntity;
 import de.codebarista.shopware.appserver.model.ShopwareShopEntityRepository;
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,37 +38,32 @@ public class ShopManagementService {
         this.properties = properties;
     }
 
-    @Nonnull public String registerShop(@Nonnull ShopwareApp app, @Nonnull String shopId, @Nonnull String shopUrl, @Nonnull String shopwareVersion) {
-        return getShopById(app, shopId)
-                .map(shop -> reRegisterExistingShop(app, shop, shopId, shopUrl, shopwareVersion))
-                .orElseGet(() -> registerNewShop(app, shopId, shopUrl, shopwareVersion));
-    }
-
-    private String registerNewShop(ShopwareApp app, String shopId, String shopUrl, String shopwareVersion) {
-        LOGGER.info("Registering new shop for app {} with ID '{}'", app, shopId);
-        String shopSecret = generateShopSecret();
+    @Nonnull public String registerShop(@Nonnull ShopwareApp app, @Nonnull String shopId, @Nonnull String shopUrl,
+                                        @Nullable String shopwareVersion, boolean reRegistrationVerifiedWithShopSignature) {
         String shopHost = inferShopHost(shopUrl);
-        final var shop = shopwareShopEntityRepository.save(new ShopwareShopEntity(app.getAppKey(), shopId, shopHost, shopUrl, shopSecret, shopwareVersion));
-        app.onRegisterShop(shopHost, shopId, shop.getId());
-        return shopSecret;
-    }
-
-    private String reRegisterExistingShop(ShopwareApp app, ShopwareShopEntity shop, String shopId, String shopUrl, String shopwareVersion) {
-        LOGGER.info("Re-registering existing shop for app {} with ID '{}'", shop.getAppKey(), shop.getShopId());
-
-        String shopHost = inferShopHost(shopUrl);
-        String newSecret = generateShopSecret();
-        shop.setShopHost(shopHost);
-        shop.setShopRequestUrl(shopUrl);
-        shop.setShopSecret(newSecret);
-        shop.updateShopwareVersion(shopwareVersion);
-        shop.revertConfirmation();
+        ShopwareShopEntity shop = getShopById(app, shopId).orElse(new ShopwareShopEntity(app.getAppKey(), shopId));
+        if (shopwareVersion != null) {
+            shop.updateShopwareVersion(shopwareVersion);
+        }
         shop.revertDeletion();
+
+        if (reRegistrationVerifiedWithShopSignature) {
+            // Once a shop has been re-registered with a valid shop signature all future
+            // re-registrations will also require a shop signature
+            shop.setReRegistrationRequiresShopSignature(true);
+        }
+
+        String secret = generateShopSecret();
+        shop.setPendingRegistration(secret, shopUrl);
+
         shop = shopwareShopEntityRepository.save(shop);
+        if (shop.getShopSecret().isEmpty()) {
+            app.onRegisterShop(shopHost, shopId, shop.getId());
+        } else {
+            app.onReRegisterShop(shopHost, shopId, shop.getId());
+        }
 
-        app.onReRegisterShop(shopHost, shopId, shop.getId());
-
-        return newSecret;
+        return secret;
     }
 
     private String inferShopHost(String shopUrl) {
@@ -94,12 +90,28 @@ public class ShopManagementService {
 
     private boolean confirmRegistration(ShopwareShopEntity shop, String confirmShopHost,
                                         String apiKey, String secretKey) {
-        if (!shop.getShopHost().equals(confirmShopHost)) {
-            LOGGER.warn("Shop registration failed: Shop hosts do not match. Known host: '{}', " +
-                    "host from confirmation request: '{}'", shop.getShopHost(), confirmShopHost);
+        if (shop.getPendingShopUrl() == null) {
+            LOGGER.atWarn()
+                .setMessage("Shop confirmation received for shop {} ({}) without pending registration")
+                .addArgument(shop.getShopId())
+                .addArgument(shop.getShopHost())
+                .log();
             return false;
         }
-        shop.confirmRegistrationAndAddShopApiSecrets(apiKey, secretKey);
+
+        String expectedHost = inferShopHost(shop.getPendingShopUrl());
+        if (!expectedHost.equals(confirmShopHost)) {
+            LOGGER.atWarn()
+                .setMessage("Shop confirmation for shop {} failed because expected host '{}' does not match actual host '{}'.")
+                .addArgument(shop.getShopId())
+                .addArgument(expectedHost)
+                .addArgument(confirmShopHost)
+                .log();
+            return false;
+        }
+
+        shop.confirmPendingRegistrationAndAddShopApiSecrets(apiKey, secretKey);
+        shop.setShopHost(confirmShopHost);
         shopwareShopEntityRepository.save(shop);
         return true;
     }

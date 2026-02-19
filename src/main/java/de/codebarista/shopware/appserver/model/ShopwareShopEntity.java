@@ -69,6 +69,15 @@ public class ShopwareShopEntity {
     @Column(name = "LAST_USED_AT")
     private OffsetDateTime lastUsedAt;
 
+    @Column(name = "PENDING_SHOP_SECRET")
+    private String pendingShopSecret;
+
+    @Column(name = "PENDING_SHOP_URL")
+    private String pendingShopUrl;
+
+    @Column(name = "REREGISTRATION_REQUIRES_SHOP_SIGNATURE")
+    private Boolean reRegistrationRequiresShopSignature;
+
     // Used from Thymeleaf template
     @Column(name = "DELETED_AT")
     private LocalDateTime deletedAt;
@@ -76,31 +85,35 @@ public class ShopwareShopEntity {
     ShopwareShopEntity() {
     }
 
-    public ShopwareShopEntity(String appKey, String shopId, String shopHost, String shopRequestUrl, String shopSecret,
-                              String shopwareVersion) {
+    public ShopwareShopEntity(String appKey, String shopId) {
         this.registrationRequestedAt = OffsetDateTime.now();
         this.appKey = appKey;
         this.shopId = shopId;
-        this.shopHost = shopHost;
-        this.shopRequestUrl = shopRequestUrl;
-        this.shopSecret = shopSecret;
-
-        this.shopwareVersion = shopwareVersion;
-        this.shopwareVersionLastUpdatedAt = OffsetDateTime.now();
+        // Shop host, url and secret will be set at confirmation time from pending secret and url.
+        // The non null constraint can't be dropped easily from the sqlite table hence we just set
+        // empty strings.
+        this.shopHost = "";
+        this.shopRequestUrl = "";
+        this.shopSecret = "";
     }
 
-    public void confirmRegistrationAndAddShopApiSecrets(String apiKey, String apiSecretKey) {
+    public void confirmPendingRegistrationAndAddShopApiSecrets(String apiKey, String apiSecretKey) {
+        if (!hasPendingRegistration()) {
+            throw new IllegalStateException("No pending registration that can be confirmed.");
+        }
         registrationConfirmedAt = OffsetDateTime.now();
         shopAdminApiKey = apiKey;
         shopAdminApiSecretKey = apiSecretKey;
+        shopSecret = pendingShopSecret;
+        shopRequestUrl = pendingShopUrl;
+        pendingShopSecret = null;
+        pendingShopUrl = null;
         registrationConfirmed = true;
     }
 
-    public void revertConfirmation() {
-        registrationConfirmedAt = null;
-        shopAdminApiKey = null;
-        shopAdminApiSecretKey = null;
-        registrationConfirmed = false;
+    public void setPendingRegistration(String newSecret, String newShopUrl) {
+        this.pendingShopSecret = newSecret;
+        this.pendingShopUrl = newShopUrl;
     }
 
     public boolean isMarkedAsDeleted() {
@@ -281,5 +294,25 @@ public class ShopwareShopEntity {
      */
     public LocalDateTime getDeletedAt() {
         return deletedAt;
+    }
+
+    public String getPendingShopSecret() {
+        return pendingShopSecret;
+    }
+
+    public String getPendingShopUrl() {
+        return pendingShopUrl;
+    }
+
+    public boolean hasPendingRegistration() {
+        return pendingShopSecret != null && pendingShopUrl != null;
+    }
+
+    public boolean reRegistrationRequiresShopSignature() {
+        return Boolean.TRUE.equals(reRegistrationRequiresShopSignature);
+    }
+
+    public void setReRegistrationRequiresShopSignature(boolean reRegistrationRequiresShopSignature) {
+        this.reRegistrationRequiresShopSignature = reRegistrationRequiresShopSignature;
     }
 }

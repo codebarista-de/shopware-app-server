@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Shop secret rotation: existing shop secret remains active during re-registration until the new registration is confirmed
+- Shop signature verification on re-registration: once a shop re-registers with a valid shop signature, all future re-registrations for that shop require a valid shop signature
+
 ## [1.0.0] - 2025-11-22
 
 ### Added

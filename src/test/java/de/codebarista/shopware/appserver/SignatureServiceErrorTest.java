@@ -1,8 +1,6 @@
 package de.codebarista.shopware.appserver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import de.codebarista.shopware.appserver.exception.InvalidSignatureException;
 import de.codebarista.shopware.appserver.service.SignatureService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,28 +23,28 @@ public class SignatureServiceErrorTest {
     @Test
     public void calculateSignatureWithNullDataFails() {
         assertThatThrownBy(() -> signatureService.calculateSignature(null, "secret"))
-                .isInstanceOf(InvalidSignatureException.class)
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Data or secret cannot be null");
     }
 
     @Test
     public void calculateSignatureWithNullSecretFails() {
         assertThatThrownBy(() -> signatureService.calculateSignature("data", null))
-                .isInstanceOf(InvalidSignatureException.class)
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Data or secret cannot be null");
     }
 
     @Test
     public void calculateSignatureWithBothNullFails() {
         assertThatThrownBy(() -> signatureService.calculateSignature(null, null))
-                .isInstanceOf(InvalidSignatureException.class)
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Data or secret cannot be null");
     }
 
     @Test
     public void serializeAndCalculateSignatureWithNullDataFails() {
         assertThatThrownBy(() -> signatureService.serializeAndCalculateSignature(null, "secret"))
-                .isInstanceOf(InvalidSignatureException.class)
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Data or secret cannot be null");
     }
 
@@ -54,14 +52,14 @@ public class SignatureServiceErrorTest {
     public void serializeAndCalculateSignatureWithNullSecretFails() {
         Object data = new TestData("test");
         assertThatThrownBy(() -> signatureService.serializeAndCalculateSignature(data, null))
-                .isInstanceOf(InvalidSignatureException.class)
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Data or secret cannot be null");
     }
 
     @Test
     public void hashWithNullDataFails() {
         assertThatThrownBy(() -> signatureService.hash(null))
-                .isInstanceOf(InvalidSignatureException.class)
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Data to hash cannot be null");
     }
 
@@ -101,7 +99,7 @@ public class SignatureServiceErrorTest {
     public void calculateSignatureWithEmptySecretFails() {
         // Empty secret should throw exception due to HMAC requirements
         assertThatThrownBy(() -> signatureService.calculateSignature("data", ""))
-                .isInstanceOf(InvalidSignatureException.class)
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Could not calculate signature");
     }
 
