@@ -39,23 +39,23 @@ public class AdminApiStub implements AdminApi {
     }
 
     @Override
-    public <T> @Nonnull List<T> search(ShopwareApp app, String shopId, String entityName, SearchQuery query,
+    @Nonnull public <T> List<T> search(ShopwareApp app, String shopId, String entityName, SearchQuery query,
                                        Class<? extends SearchResult<T>> responseType, String shopwareLanguageId) {
         return List.of();
     }
 
     @Override
-    public <T> @Nonnull T script(ShopwareApp app, String shopId, String hookName, Object requestBody, Class<T> responseClass) {
+    @Nonnull public <T> T script(ShopwareApp app, String shopId, String hookName, Object requestBody, Class<T> responseClass) {
         return responseClass.cast(scriptResult);
     }
 
     @Override
-    public @Nonnull SyncResult sync(ShopwareApp app, String shopId, Object requestBody) {
+    @Nonnull public SyncResult sync(ShopwareApp app, String shopId, Object requestBody) {
         throw new RuntimeException("Method 'sync' not implemented in stub");
     }
 
     @Override
-    public <T> @Nonnull T sync(ShopwareApp app, String shopId, Object requestBody, Class<T> responseClass) {
+    @Nonnull public <T> T sync(ShopwareApp app, String shopId, Object requestBody, Class<T> responseClass) {
         throw new RuntimeException("Method 'sync' not implemented in stub");
     }
 

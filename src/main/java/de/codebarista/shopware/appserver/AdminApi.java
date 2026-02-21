@@ -79,12 +79,12 @@ public interface AdminApi {
      * @param <T>                java type of the entity
      * @return a list of all entity instances that match the query
      */
-    <T> @Nonnull List<T> search(ShopwareApp app, String shopId, String entityName, SearchQuery query, Class<? extends SearchResult<T>> responseType, String shopwareLanguageId);
+    @Nonnull <T> List<T> search(ShopwareApp app, String shopId, String entityName, SearchQuery query, Class<? extends SearchResult<T>> responseType, String shopwareLanguageId);
 
     /**
      * Like {@link AdminApi#search(ShopwareApp, String, String, SearchQuery, Class, String)} but {@code shopwareLanguageId} set to {@code null}
      */
-    default <T> @Nonnull List<T> search(ShopwareApp app, String shopId, String entityName, SearchQuery query, Class<? extends SearchResult<T>> responseType) {
+    @Nonnull default <T> List<T> search(ShopwareApp app, String shopId, String entityName, SearchQuery query, Class<? extends SearchResult<T>> responseType) {
         return search(app, shopId, entityName, query, responseType, null);
     }
 
@@ -101,7 +101,7 @@ public interface AdminApi {
      * @param <T>           type of the response class
      * @return deserialized json response
      */
-    <T> @Nonnull T script(ShopwareApp app, String shopId, String hookName, Object requestBody, Class<T> responseClass);
+    @Nonnull <T> T script(ShopwareApp app, String shopId, String hookName, Object requestBody, Class<T> responseClass);
 
     /**
      * Executes a sync operation against the Shopware Admin API.
@@ -128,7 +128,7 @@ public interface AdminApi {
      * @param <T>           the type of the response
      * @return the deserialized sync response
      */
-    <T> @Nonnull T sync(ShopwareApp app, String shopId, Object requestBody, Class<T> responseClass);
+    @Nonnull <T> T sync(ShopwareApp app, String shopId, Object requestBody, Class<T> responseClass);
 
     /**
      * Creates a UriComponentsBuilder pre-configured with the shop's base URL.
