@@ -65,7 +65,7 @@ public class ShopwareAccessTokenClientService {
 
         var requestEntity = new HttpEntity<>(accessTokenRequest, headers);
 
-        var urlBuilder = UriComponentsBuilder.fromHttpUrl(shop.getShopRequestUrl());
+        var urlBuilder = UriComponentsBuilder.fromUriString(shop.getShopRequestUrl());
         if (sslOnly) {
             urlBuilder.scheme("https");
         }

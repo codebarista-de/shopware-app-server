@@ -7,8 +7,6 @@ import de.codebarista.shopware.appserver.ShopwareApp;
 import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 @Component

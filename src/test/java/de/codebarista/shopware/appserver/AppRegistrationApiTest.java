@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.codebarista.shopware.appserver.api.dto.action.ActionResponseDto;
-import de.codebarista.shopware.appserver.api.dto.action.ActionResponseNotificationDto;
 import de.codebarista.shopware.appserver.api.dto.registration.ShopwareAppConfirmationDto;
 import de.codebarista.shopware.appserver.api.dto.registration.ShopwareAppRegistrationResponseDto;
 import de.codebarista.shopware.appserver.model.ShopwareShopEntityRepository;
@@ -26,7 +25,6 @@ import java.util.Objects;
 
 import static de.codebarista.shopware.appserver.api.ApiConstants.SHOPWARE_APP_SIGNATURE_HEADER;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 
 @WebServerTest
 public class AppRegistrationApiTest {
