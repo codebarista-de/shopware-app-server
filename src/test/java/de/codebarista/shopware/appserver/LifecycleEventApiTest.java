@@ -16,7 +16,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.util.Collections;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @WebServerTest
 public class LifecycleEventApiTest {
@@ -30,10 +30,6 @@ public class LifecycleEventApiTest {
     @Test
     @Sql("/insert_testshop_for_testapp_a.sql")
     public void successfullyDeleteShop() {
-        String shopId = "test1234";
-        String shopUrl = "http://myshopurl.test";
-        String shopHost = "myshopurl.test";
-
         webTestClient.post()
                 .uri(URL_DELETED)
                 .header(HttpHeaders.HOST, HOST_HEADER_VALUE)
@@ -46,9 +42,7 @@ public class LifecycleEventApiTest {
                 .expectStatus()
                 .is2xxSuccessful();
 
-        var shop = checkAndReturnShopEntity(shopId, shopHost);
-        assertThat(shop.getRegistrationConfirmedAt()).isNotNull();
-        assertThat(shop.getDeletedAt()).isNotNull();
+        assertThat(shopwareShopEntityRepository.findAll()).isEmpty();
     }
 
     @Test
@@ -71,7 +65,7 @@ public class LifecycleEventApiTest {
                 .is4xxClientError();
 
         var shop = checkAndReturnShopEntity(shopId, shopHost);
-        assertThat(shop.getDeletedAt()).isNull();
+        assertThat(shop).isNotNull();
     }
 
     private ShopwareEventDto buildDeletedEventDto(String shopUrl, String shopId) {

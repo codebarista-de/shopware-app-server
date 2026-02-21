@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    <!--
+        Uses raw SQL instead of <dropColumn> because Liquibase's SQLite handling
+        recreates the entire table, which can drop UNIQUE constraints.
+    -->
+    <changeSet author="Codebarista" id="drop-deleted-at" context="app-server-core">
+        <sql>ALTER TABLE SHOPWARE_SHOP DROP COLUMN DELETED_AT</sql>
+    </changeSet>
+</databaseChangeLog>

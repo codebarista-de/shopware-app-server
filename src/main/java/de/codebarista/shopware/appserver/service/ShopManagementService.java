@@ -45,8 +45,6 @@ public class ShopManagementService {
         if (shopwareVersion != null) {
             shop.updateShopwareVersion(shopwareVersion);
         }
-        shop.revertDeletion();
-
         if (reRegistrationVerifiedWithShopSignature) {
             // Once a shop has been re-registered with a valid shop signature all future
             // re-registrations will also require a shop signature
@@ -155,12 +153,11 @@ public class ShopManagementService {
         if (shop == null) {
             return;
         }
-        shop.markAsDeleted();
-        shopwareShopEntityRepository.save(shop);
 
         app.onDeleteShop(shopHost, shopId, shop.getId());
+        shopwareShopEntityRepository.delete(shop);
 
-        LOGGER.info("Marked {} for shop {} ({}) as deleted", app, shopId, shopHost);
+        LOGGER.info("Deleted shop {} ({}) for {}", shopId, shopHost, app);
     }
 
     String generateShopSecret() {

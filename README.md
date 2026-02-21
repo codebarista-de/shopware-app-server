@@ -186,7 +186,7 @@ yourself—it's handled by the `ShopwareSignatureVerificationFilter`.
 Lifecycle events notify your backend when the app is activated, deactivated, updated, or deleted in a shop.
 These events are opt-in—Shopware only sends them if you register for them in your manifest.
 
-> **Note:** Currently, only the `deleted` event has built-in handling (marks it as deleted in the database).
+> **Note:** Currently, only the `deleted` event has built-in handling (removes the shop from the database).
 > The other events are received and **logged only!**
 > See [GitHub Issue](https://github.com/codebarista-de/shopware-app-server/issues/9).
 > 
@@ -200,7 +200,7 @@ You need to define the URLs listed below in your manifest to use the app-server'
 | `POST /shopware/api/v1/lifecycle/activated`   | Called when the shop admin activates your app                                                                                                                      |
 | `POST /shopware/api/v1/lifecycle/deactivated` | Called when the shop admin deactivates your app                                                                                                                    |
 | `POST /shopware/api/v1/lifecycle/updated`     | Called when your app is updated to a new version                                                                                                                   |
-| `POST /shopware/api/v1/lifecycle/deleted`     | Called when your app is uninstalled from a shop. Marks it as deleted in the database. Then calls the `onDeleteShop()` method of your `ShopwareApp` implementation. |
+| `POST /shopware/api/v1/lifecycle/deleted`     | Called when your app is uninstalled from a shop. Removes the shop from the database. Calls the `onDeleteShop()` method of your `ShopwareApp` implementation before deletion. |
 
 See the Shopware documentation for more details:
 

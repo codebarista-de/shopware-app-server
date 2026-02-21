@@ -7,7 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -78,10 +77,6 @@ public class ShopwareShopEntity {
     @Column(name = "REREGISTRATION_REQUIRES_SHOP_SIGNATURE")
     private Boolean reRegistrationRequiresShopSignature;
 
-    // Used from Thymeleaf template
-    @Column(name = "DELETED_AT")
-    private LocalDateTime deletedAt;
-
     ShopwareShopEntity() {
     }
 
@@ -114,20 +109,6 @@ public class ShopwareShopEntity {
     public void setPendingRegistration(String newSecret, String newShopUrl) {
         this.pendingShopSecret = newSecret;
         this.pendingShopUrl = newShopUrl;
-    }
-
-    public boolean isMarkedAsDeleted() {
-        return deletedAt != null;
-    }
-
-    public void markAsDeleted() {
-        if (this.deletedAt == null) {
-            this.deletedAt = LocalDateTime.now();
-        }
-    }
-
-    public void revertDeletion() {
-        this.deletedAt = null;
     }
 
     public void updateShopwareVersion(String shopwareVersion) {
@@ -287,13 +268,6 @@ public class ShopwareShopEntity {
      */
     public OffsetDateTime getLastUsedAt() {
         return lastUsedAt;
-    }
-
-    /**
-     * Gets the {@link #deletedAt}.
-     */
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
     }
 
     public String getPendingShopSecret() {
