@@ -30,28 +30,28 @@ public class AppLookupServiceErrorTest {
     }
 
     @Test
-    public void getAppByKey_withNonExistentKey_throwsNoSuchAppException() {
+    public void getAppByKeyWithNonExistentKeyThrows() {
         assertThatThrownBy(() -> appLookupService.getAppByKey("nonexistent"))
                 .isInstanceOf(NoSuchAppException.class)
                 .hasMessage("No such app nonexistent");
     }
 
     @Test
-    public void getAppByKey_withNullKey_throwsNoSuchAppException() {
+    public void getAppByKeyWithNullKeyThrows() {
         assertThatThrownBy(() -> appLookupService.getAppByKey(null))
                 .isInstanceOf(NoSuchAppException.class)
                 .hasMessage("No such app null");
     }
 
     @Test
-    public void getAppByKey_withEmptyKey_throwsNoSuchAppException() {
+    public void getAppByKeyWithEmptyKeyThrows() {
         assertThatThrownBy(() -> appLookupService.getAppByKey(""))
                 .isInstanceOf(NoSuchAppException.class)
                 .hasMessage("No such app ");
     }
 
     @Test
-    public void getAppByKey_withValidKey_returnsCorrectApp() {
+    public void getAppByKeyWithValidKeyReturnsCorrectApp() {
         ShopwareApp result = appLookupService.getAppByKey(testAppA.getAppKey());
         assertThat(result).isEqualTo(testAppA);
 
@@ -60,7 +60,7 @@ public class AppLookupServiceErrorTest {
     }
 
     @Test
-    public void getAppForHost_withNonExistentHost_throwsNoSuchAppException() {
+    public void getAppForHostWithNonExistentHostThrows() {
         // This should extract subdomain and then fail to find app
         assertThatThrownBy(() -> appLookupService.getAppForHost("nonexistent.example.com"))
                 .isInstanceOf(NoSuchAppException.class)
@@ -68,7 +68,7 @@ public class AppLookupServiceErrorTest {
     }
 
     @Test
-    public void getAppForHost_withValidHost_returnsCorrectApp() {
+    public void getAppForHostWithValidHostReturnsCorrectApp() {
         // Assuming testAppA has appKey that matches subdomain
         String hostWithAppKey = testAppA.getAppKey() + ".example.com";
         ShopwareApp result = appLookupService.getAppForHost(hostWithAppKey);
@@ -76,21 +76,21 @@ public class AppLookupServiceErrorTest {
     }
 
     @Test
-    public void tryGetForHost_withNonExistentHost_returnsNull() {
+    public void tryGetForHostWithNonExistentHostReturnsNull() {
         // tryGetForHost should return null instead of throwing
         ShopwareApp result = appLookupService.tryGetForHost("nonexistent.example.com");
         assertThat(result).isNull();
     }
 
     @Test
-    public void tryGetForHost_withNullHost_returnsNull() {
+    public void tryGetForHostWithNullHostReturnsNull() {
         // tryGetForHost should handle null gracefully
         ShopwareApp result = appLookupService.tryGetForHost(null);
         assertThat(result).isNull();
     }
 
     @Test
-    public void tryGetForHost_withInvalidHost_returnsNull() {
+    public void tryGetForHostWithInvalidHostReturnsNull() {
         // Hosts without dots should return null
         assertThat(appLookupService.tryGetForHost("localhost")).isNull();
         assertThat(appLookupService.tryGetForHost("")).isNull();
@@ -98,14 +98,14 @@ public class AppLookupServiceErrorTest {
     }
 
     @Test
-    public void tryGetForHost_withValidHost_returnsCorrectApp() {
+    public void tryGetForHostWithValidHostReturnsCorrectApp() {
         String hostWithAppKey = testAppA.getAppKey() + ".example.com";
         ShopwareApp result = appLookupService.tryGetForHost(hostWithAppKey);
         assertThat(result).isEqualTo(testAppA);
     }
 
     @Test
-    public void getAppByKey_isCaseSensitive() {
+    public void getAppByKeyIsCaseSensitive() {
         String upperCaseKey = testAppA.getAppKey().toUpperCase();
 
         // Should throw exception because keys are case sensitive
@@ -114,7 +114,7 @@ public class AppLookupServiceErrorTest {
     }
 
     @Test
-    public void tryGetForHost_withSubdomainOnly_worksCorrectly() {
+    public void tryGetForHostWithSubdomainOnly() {
         // Test edge case where host is just subdomain + domain
         String minimalHost = testAppA.getAppKey() + ".com";
         ShopwareApp result = appLookupService.tryGetForHost(minimalHost);
@@ -122,14 +122,14 @@ public class AppLookupServiceErrorTest {
     }
 
     @Test
-    public void tryGetForHost_withEmptySubdomain_returnsNull() {
+    public void tryGetForHostWithEmptySubdomainReturnsNull() {
         // Host starting with dot should have empty subdomain
         ShopwareApp result = appLookupService.tryGetForHost(".example.com");
         assertThat(result).isNull();
     }
 
     @Test
-    public void tryGetForHost_withComplexSubdomain_extractsCorrectly() {
+    public void tryGetForHostWithComplexSubdomain_extractsCorrectly() {
         // Should only extract the first part before the first dot
         String complexHost = testAppA.getAppKey() + ".sub.domain.example.com";
         ShopwareApp result = appLookupService.tryGetForHost(complexHost);

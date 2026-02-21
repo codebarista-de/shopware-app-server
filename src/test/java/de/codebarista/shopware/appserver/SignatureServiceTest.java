@@ -19,7 +19,7 @@ public class SignatureServiceTest {
     }
 
     @Test
-    public void testCalculateSignature() {
+    public void calculateSignature() {
         String shopId = "zYh6GeKt5VK3UhU5";
         String shopUrl = "http://127.0.0.1:8000";
         String appName = "BaristaUploadApp";
@@ -32,7 +32,7 @@ public class SignatureServiceTest {
     }
 
     @Test
-    public void testVerifySignature() {
+    public void verifySignature() {
         String shopwareShopSignature = "cc7fa4fb23901eacc5c68ee5a55ca74d1c71264390d7b49c1d86836c039a12c4";
         String query = "shop-id=zYh6GeKt5VK3UhU5&shop-url=http://localhost:8000&timestamp=1703088642"
                 + "&sw-version=6.5.7.3&sw-context-language=2fbb5fe2e29a4d70aa5854ce7ce3e20b"

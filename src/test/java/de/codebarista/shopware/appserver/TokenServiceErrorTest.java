@@ -37,28 +37,28 @@ public class TokenServiceErrorTest {
     }
 
     @Test
-    public void generateAppToken_withNullApp_throwsInvalidTokenException() {
+    public void generateAppTokenWithNullAppThrows() {
         assertThatThrownBy(() -> tokenService.generateAppToken(null, "shopId"))
                 .isInstanceOf(InvalidTokenException.class)
                 .hasMessage("Data or secret to sign cannot be null");
     }
 
     @Test
-    public void generateAppToken_withNullShopId_throwsInvalidTokenException() {
+    public void generateAppTokenWithNullShopIdThrows() {
         assertThatThrownBy(() -> tokenService.generateAppToken(testApp, null))
                 .isInstanceOf(InvalidTokenException.class)
                 .hasMessage("Data or secret to sign cannot be null");
     }
 
     @Test
-    public void generateAppToken_withBothNull_throwsInvalidTokenException() {
+    public void generateAppTokenWithBothNullThrows() {
         assertThatThrownBy(() -> tokenService.generateAppToken(null, null))
                 .isInstanceOf(InvalidTokenException.class)
                 .hasMessage("Data or secret to sign cannot be null");
     }
 
     @Test
-    public void isAppTokenValid_withNullInputs_returnsFalseGracefully() {
+    public void isAppTokenValidWithNullInputsGracefully() {
         // All null inputs should return false, not throw exceptions
         assertThat(tokenService.isAppTokenValid(null, null, null)).isFalse();
         assertThat(tokenService.isAppTokenValid(testApp, null, "token")).isFalse();
@@ -67,7 +67,7 @@ public class TokenServiceErrorTest {
     }
 
     @Test
-    public void isAppTokenValid_withInvalidTokenLength_returnsFalse() {
+    public void isAppTokenValidWithInvalidTokenLength() {
         // Token must be exactly 148 chars (20 + 64 + 64)
         assertThat(tokenService.isAppTokenValid(testApp, "shopId", "")).isFalse();
         assertThat(tokenService.isAppTokenValid(testApp, "shopId", "short")).isFalse();
@@ -76,7 +76,7 @@ public class TokenServiceErrorTest {
     }
 
     @Test
-    public void isAppTokenValid_withNonExistentShop_returnsFalse() {
+    public void isAppTokenValidWithNonExistentShop() {
         when(shopManagementService.getShopById(any(), any())).thenReturn(Optional.empty());
 
         String validLengthToken = "x".repeat(148);
@@ -84,7 +84,7 @@ public class TokenServiceErrorTest {
     }
 
     @Test
-    public void isTokenExpired_withTooShortToken_returnsTrue() {
+    public void isTokenExpiredWithTooShortToken() {
         // Tokens shorter than 20 characters should be considered expired
         assertThat(tokenService.isTokenExpired("")).isTrue();
         assertThat(tokenService.isTokenExpired("short")).isTrue();
@@ -92,14 +92,14 @@ public class TokenServiceErrorTest {
     }
 
     @Test
-    public void isTokenExpired_withInvalidTimestamp_returnsTrue() {
+    public void isTokenExpiredWithInvalidTimestamp() {
         // Non-numeric timestamp should be considered expired
         String invalidToken = "abcdefghijklmnopqrst" + "x".repeat(128); // 20 non-numeric + rest
         assertThat(tokenService.isTokenExpired(invalidToken)).isTrue();
     }
 
     @Test
-    public void isTokenExpired_withNegativeTimestamp_returnsTrue() {
+    public void isTokenExpiredWithNegativeTimestamp() {
         // Negative timestamp should be considered expired
         String negativeTimestamp = String.format("%020d", -1L); // -1 padded to 20 chars
         String tokenWithNegativeTime = negativeTimestamp + "x".repeat(128);
@@ -107,7 +107,7 @@ public class TokenServiceErrorTest {
     }
 
     @Test
-    public void isTokenExpired_withFutureTimestamp_returnsFalse() {
+    public void isTokenExpiredWithFutureTimestamp() {
         // Future timestamp should not be expired
         long futureTime = System.currentTimeMillis() + Duration.ofHours(1).toMillis();
         String futureTimestamp = String.format("%020d", futureTime);
@@ -116,7 +116,7 @@ public class TokenServiceErrorTest {
     }
 
     @Test
-    public void isTokenExpired_withExactlyExpiredToken_returnsTrue() {
+    public void isTokenExpiredWithExactlyExpiredToken() {
         // Token that expired exactly now should be considered expired
         long expiredTime = System.currentTimeMillis() - TokenServiceImpl.TOKEN_TTL_SECONDS * 1000;
         String expiredTimestamp = String.format("%020d", expiredTime);
@@ -125,7 +125,7 @@ public class TokenServiceErrorTest {
     }
 
     @Test
-    public void isTokenExpired_withAlmostExpiredToken_returnsFalse() {
+    public void isTokenExpiredWithAlmostExpiredToken() {
         // Token that expires in 1 second should still be valid
         long almostExpiredTime = System.currentTimeMillis() - TokenServiceImpl.TOKEN_TTL_SECONDS * 1000 + 1000;
         String almostExpiredTimestamp = String.format("%020d", almostExpiredTime);
@@ -134,7 +134,7 @@ public class TokenServiceErrorTest {
     }
 
     @Test
-    public void isTokenExpired_withVeryOldToken_returnsTrue() {
+    public void isTokenExpiredWithVeryOldToken() {
         // Very old token should definitely be expired
         long veryOldTime = System.currentTimeMillis() - Duration.ofDays(365).toMillis();
         String veryOldTimestamp = String.format("%020d", veryOldTime);
@@ -143,7 +143,7 @@ public class TokenServiceErrorTest {
     }
 
     @Test
-    public void isTokenExpired_withZeroTimestamp_returnsTrue() {
+    public void isTokenExpiredWithZeroTimestamp() {
         // Token with timestamp 0 should be expired
         String zeroTimestamp = "00000000000000000000"; // 20 zeros
         String tokenWithZeroTime = zeroTimestamp + "x".repeat(128);
@@ -151,7 +151,7 @@ public class TokenServiceErrorTest {
     }
 
     @Test
-    public void isTokenExpired_withMixedValidInvalidCharacters_returnsTrue() {
+    public void isTokenExpiredWithMixedValidInvalidCharacters() {
         // Mix of numbers and letters in timestamp should be invalid
         String mixedTimestamp = "1234567890abcdefghij"; // 10 numbers + 10 letters
         String tokenWithMixedTime = mixedTimestamp + "x".repeat(128);
@@ -159,7 +159,7 @@ public class TokenServiceErrorTest {
     }
 
     @Test
-    public void generateAndValidateTokenFlow_withValidShop_worksCorrectly() {
+    public void generateAndValidateTokenFlowWithValidShop() {
         // Setup valid shop
         String shopId = "testShop";
         ShopwareShopEntity shop = new ShopwareShopEntity(
