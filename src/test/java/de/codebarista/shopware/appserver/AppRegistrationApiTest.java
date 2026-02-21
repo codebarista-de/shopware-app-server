@@ -619,6 +619,60 @@ public class AppRegistrationApiTest {
     }
 
     @Test
+    public void deletedShopWithShopSignatureRequirementCanBeRegisteredWithoutShopSignature() {
+        var app = new TestAppA();
+        String shopId = "test-shop-delete-rereg";
+        String shopUrl = "https://myshop.de";
+
+        // Register and confirm
+        var registration = registerShopForApp(webTestClient, app, shopId, shopUrl);
+        String shopSecret = registration.getShopSecret();
+        requestConfirmRegistration(webTestClient, app, shopSecret, shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+
+        // Re-register with shop signature (sets reregistrationRequiresShopSignature=true)
+        var reregistration = registerShopForAppWithShopSignature(webTestClient, app, shopId, shopUrl, shopSecret);
+        String reregSecret = reregistration.getShopSecret();
+        requestConfirmRegistration(webTestClient, app, reregSecret, shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+
+        // Delete the shop via lifecycle event (hard deletes the row)
+        requestLifecycleDeleted(webTestClient, app, reregSecret, shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+
+        // Register the same shop ID again WITHOUT a shop signature — expect success (the flag is gone with the row)
+        var freshRegistration = registerShopForApp(webTestClient, app, shopId, shopUrl);
+        String freshSecret = freshRegistration.getShopSecret();
+        requestConfirmRegistration(webTestClient, app, freshSecret, shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+
+        // Verify the shop works
+        sendAction(webTestClient, app, freshSecret, shopId, shopUrl, "after-delete-test")
+                .expectStatus().is2xxSuccessful();
+    }
+
+    @Test
+    public void deletedShopCanNoLongerAuthenticate() {
+        var app = new TestAppA();
+        String shopId = "test-shop-delete-auth";
+        String shopUrl = "https://myshop.de";
+
+        // Register and confirm
+        var registration = registerShopForApp(webTestClient, app, shopId, shopUrl);
+        String shopSecret = registration.getShopSecret();
+        requestConfirmRegistration(webTestClient, app, shopSecret, shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+
+        // Delete the shop via lifecycle event
+        requestLifecycleDeleted(webTestClient, app, shopSecret, shopId, shopUrl)
+                .expectStatus().is2xxSuccessful();
+
+        // Try to send an action with the old shop secret — expect 401 (shop no longer exists)
+        sendAction(webTestClient, app, shopSecret, shopId, shopUrl, "foo")
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
     public void registrationFailsWithBlankTimestamp() {
         var app = new TestAppA();
         String query = "shop-id=shop1&shop-url=https://myshop.de&timestamp=";
