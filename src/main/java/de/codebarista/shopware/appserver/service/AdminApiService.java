@@ -59,7 +59,7 @@ public class AdminApiService implements AdminApi {
         return builder;
     }
 
-    public <T> @Nonnull List<T> search(ShopwareApp app,
+    @Nonnull public <T> List<T> search(ShopwareApp app,
                                        String shopId,
                                        String entityName,
                                        SearchQuery query,
@@ -105,7 +105,7 @@ public class AdminApiService implements AdminApi {
     }
 
 
-    public <T> @Nonnull T getForObject(URI url, HttpEntity<?> request, Class<T> responseType) {
+    @Nonnull public <T> T getForObject(URI url, HttpEntity<?> request, Class<T> responseType) {
         var response = restTemplate.exchange(url, HttpMethod.GET, request, responseType);
         var object = response.getBody();
         if (object == null) {
@@ -145,7 +145,7 @@ public class AdminApiService implements AdminApi {
     }
 
     @Override
-    public <T> @Nonnull T script(ShopwareApp app, String shopId, String hookName, Object requestBody, Class<T> responseClass) {
+    @Nonnull public <T> T script(ShopwareApp app, String shopId, String hookName, Object requestBody, Class<T> responseClass) {
         var url = getShopUrlBuilder(app, shopId).pathSegment("api", "script", hookName).build().toUri();
         var headers = getTokenAndSetAuthorizationHeader(app, shopId);
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -153,12 +153,12 @@ public class AdminApiService implements AdminApi {
     }
 
     @Override
-    public @Nonnull SyncResult sync(ShopwareApp app, String shopId, Object requestBody) {
+    @Nonnull public SyncResult sync(ShopwareApp app, String shopId, Object requestBody) {
         return sync(app, shopId, requestBody, SyncResult.class);
     }
 
     @Override
-    public <T> @Nonnull T sync(ShopwareApp app, String shopId, Object requestBody, Class<T> responseClass) {
+    @Nonnull public <T> T sync(ShopwareApp app, String shopId, Object requestBody, Class<T> responseClass) {
         var url = getShopUrlBuilder(app, shopId).pathSegment("api", "_action", "sync").build().toUri();
         var headers = getTokenAndSetAuthorizationHeader(app, shopId);
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -167,7 +167,7 @@ public class AdminApiService implements AdminApi {
         return postForObject(url, new HttpEntity<>(requestBody, headers), responseClass);
     }
 
-    public <T> @Nonnull T postForObject(URI url, HttpEntity<?> request, Class<T> responseClass) {
+    @Nonnull public <T> T postForObject(URI url, HttpEntity<?> request, Class<T> responseClass) {
         T rsp = restTemplate.postForObject(url, request, responseClass);
         if (rsp == null) {
             throw new RestClientException(String.format("Missing response body on POST request for %s: %s", url, request));
