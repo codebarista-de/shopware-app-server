@@ -28,21 +28,6 @@ public class LifecycleEventApiTest {
     private ShopwareShopEntityRepository shopwareShopEntityRepository;
 
     @Test
-    public void testActivated() {
-        // TODO: implement. Event not yet used.
-    }
-
-    @Test
-    public void testDeactivated() {
-        // TODO: implement. Event not yet used.
-    }
-
-    @Test
-    public void testUpdated() {
-        // TODO: implement. Event not yet used.
-    }
-
-    @Test
     @Sql("/insert_testshop_for_testapp_a.sql")
     public void successfullyDeleteShop() {
         String shopId = "test1234";

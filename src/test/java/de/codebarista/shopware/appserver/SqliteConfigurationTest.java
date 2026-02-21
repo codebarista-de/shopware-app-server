@@ -18,13 +18,13 @@ class SqliteConfigurationTest {
     private JdbcTemplate jdbcTemplate;
 
     @Test
-    void testSqliteForEnabledForeignKeySupport() {
+    void sqliteForEnabledForeignKeySupport() {
         Integer result = jdbcTemplate.queryForObject("PRAGMA foreign_keys", Integer.class);
         assertThat(result).isEqualTo(1);
     }
 
     @Test
-    void testSqliteForBusyTimeout() {
+    void sqliteForBusyTimeout() {
         Integer result = jdbcTemplate.queryForObject("PRAGMA busy_timeout", Integer.class);
         assertThat(result).isEqualTo(5000);
     }

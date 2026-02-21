@@ -1,6 +1,7 @@
 package de.codebarista.shopware.appserver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import de.codebarista.shopware.appserver.exception.InvalidSignatureException;
 import de.codebarista.shopware.appserver.service.SignatureService;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,35 +23,35 @@ public class SignatureServiceErrorTest {
     }
 
     @Test
-    public void calculateSignature_withNullData_throwsInvalidSignatureException() {
+    public void calculateSignatureWithNullDataFails() {
         assertThatThrownBy(() -> signatureService.calculateSignature(null, "secret"))
                 .isInstanceOf(InvalidSignatureException.class)
                 .hasMessage("Data or secret cannot be null");
     }
 
     @Test
-    public void calculateSignature_withNullSecret_throwsInvalidSignatureException() {
+    public void calculateSignatureWithNullSecretFails() {
         assertThatThrownBy(() -> signatureService.calculateSignature("data", null))
                 .isInstanceOf(InvalidSignatureException.class)
                 .hasMessage("Data or secret cannot be null");
     }
 
     @Test
-    public void calculateSignature_withBothNull_throwsInvalidSignatureException() {
+    public void calculateSignatureWithBothNullFails() {
         assertThatThrownBy(() -> signatureService.calculateSignature(null, null))
                 .isInstanceOf(InvalidSignatureException.class)
                 .hasMessage("Data or secret cannot be null");
     }
 
     @Test
-    public void serializeAndCalculateSignature_withNullData_throwsInvalidSignatureException() {
+    public void serializeAndCalculateSignatureWithNullDataFails() {
         assertThatThrownBy(() -> signatureService.serializeAndCalculateSignature(null, "secret"))
                 .isInstanceOf(InvalidSignatureException.class)
                 .hasMessage("Data or secret cannot be null");
     }
 
     @Test
-    public void serializeAndCalculateSignature_withNullSecret_throwsInvalidSignatureException() {
+    public void serializeAndCalculateSignatureWithNullSecretFails() {
         Object data = new TestData("test");
         assertThatThrownBy(() -> signatureService.serializeAndCalculateSignature(data, null))
                 .isInstanceOf(InvalidSignatureException.class)
@@ -58,14 +59,14 @@ public class SignatureServiceErrorTest {
     }
 
     @Test
-    public void hash_withNullData_throwsInvalidSignatureException() {
+    public void hashWithNullDataFails() {
         assertThatThrownBy(() -> signatureService.hash(null))
                 .isInstanceOf(InvalidSignatureException.class)
                 .hasMessage("Data to hash cannot be null");
     }
 
     @Test
-    public void verifySignature_withNullInputs_returnsFalseGracefully() {
+    public void verifySignatureWithNullInputsReturnsFalseGracefully() {
         // These should return false instead of throwing exceptions
         assertThat(signatureService.verifySignature(null, "secret", "signature")).isFalse();
         assertThat(signatureService.verifySignature("data".getBytes(), null, "signature")).isFalse();
@@ -74,7 +75,7 @@ public class SignatureServiceErrorTest {
     }
 
     @Test
-    public void verifySignature_withInvalidSignature_returnsFalse() {
+    public void verifySignatureWithInvalidSignatureReturnsFalse() {
         String data = "test data";
         String secret = "test secret";
         String invalidSignature = "invalid_signature";
@@ -83,21 +84,21 @@ public class SignatureServiceErrorTest {
     }
 
     @Test
-    public void verifySignature_withEmptyInputs_returnsFalse() {
+    public void verifySignatureWithEmptyInputsReturnsFalse() {
         // Empty secret causes IllegalArgumentException in HMAC, so this should return false gracefully
         assertThat(signatureService.verifySignature("data".getBytes(), "", "signature")).isFalse();
         assertThat(signatureService.verifySignature(new byte[0], "secret", "signature")).isFalse();
     }
 
     @Test
-    public void calculateSignature_withEmptyData_worksCorrectly() {
+    public void calculateSignatureWithEmptyData() {
         // Empty data should work with valid secret
         String result = signatureService.calculateSignature("", "secret");
         assertThat(result).isNotNull().isNotEmpty();
     }
 
     @Test
-    public void calculateSignature_withEmptySecret_throwsInvalidSignatureException() {
+    public void calculateSignatureWithEmptySecretFails() {
         // Empty secret should throw exception due to HMAC requirements
         assertThatThrownBy(() -> signatureService.calculateSignature("data", ""))
                 .isInstanceOf(InvalidSignatureException.class)
@@ -105,14 +106,14 @@ public class SignatureServiceErrorTest {
     }
 
     @Test
-    public void hash_withEmptyString_worksCorrectly() {
+    public void hashWithEmptyString() {
         // Empty string should work (not null)
         String result = signatureService.hash("");
         assertThat(result).isNotNull().isNotEmpty();
     }
 
     @Test
-    public void calculateSignature_withVeryLongInputs_worksCorrectly() {
+    public void calculateSignatureWithVeryLongInputs() {
         String longData = "x".repeat(10000);
         String longSecret = "s".repeat(1000);
 
@@ -121,7 +122,7 @@ public class SignatureServiceErrorTest {
     }
 
     @Test
-    public void hash_withUnicodeCharacters_worksCorrectly() {
+    public void hashWithUnicodeCharacters() {
         String unicodeData = "Hello 世界 🌍 émojis";
 
         String result = signatureService.hash(unicodeData);
