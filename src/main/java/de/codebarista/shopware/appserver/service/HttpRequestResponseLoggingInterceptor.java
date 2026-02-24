@@ -6,6 +6,7 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.lang.NonNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,9 +17,9 @@ public class HttpRequestResponseLoggingInterceptor implements ClientHttpRequestI
     private static final Logger logger = LoggerFactory.getLogger("AdminApiHTTPClient");
 
     @Override
-    public ClientHttpResponse intercept(HttpRequest request,
-                                        byte[] body,
-                                        ClientHttpRequestExecution execution) throws IOException {
+    public @NonNull ClientHttpResponse intercept(@NonNull HttpRequest request,
+                                        @NonNull byte[] body,
+                                        @NonNull ClientHttpRequestExecution execution) throws IOException {
         logRequest(request, body);
         ClientHttpResponse response = execution.execute(request, body);
         logResponse(response);
