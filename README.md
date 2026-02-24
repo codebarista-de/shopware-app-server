@@ -73,7 +73,7 @@ requests to your code.
 
 ```groovy
 dependencies {
-    implementation 'de.codebarista:shopware-app-server:1.0.0'
+    implementation 'de.codebarista:shopware-app-server:1.1.0'
 }
 ```
 
@@ -84,7 +84,7 @@ dependencies {
 <dependency>
     <groupId>de.codebarista</groupId>
     <artifactId>shopware-app-server</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 

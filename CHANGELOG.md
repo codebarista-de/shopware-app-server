@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.1.0] - 2026-02-24
 
 ### Added
 
@@ -12,6 +12,12 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Shop deletion is now a hard delete (row removed from database) instead of a soft delete (timestamp marker)
+
+## [1.0.1] - 2026-01-09
+
+### Added
+
+- allow security filter chain that targets all endpoints
 
 ## [1.0.0] - 2025-11-22
 
@@ -25,5 +31,6 @@ All notable changes to this project will be documented in this file.
 - Liquibase database migrations
 - Spring Boot auto-configuration
 
-[Unreleased]: https://github.com/codebarista-de/shopware-app-server/compare/v1.0.0...HEAD
+[1.1.0]: https://github.com/codebarista-de/shopware-app-server/releases/tag/v1.1.0
+[1.0.1]: https://github.com/codebarista-de/shopware-app-server/releases/tag/v1.0.1
 [1.0.0]: https://github.com/codebarista-de/shopware-app-server/releases/tag/v1.0.0
